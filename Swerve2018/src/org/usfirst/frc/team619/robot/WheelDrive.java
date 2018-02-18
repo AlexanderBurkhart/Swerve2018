@@ -35,13 +35,13 @@ public class WheelDrive {
 		
 		this.angleMotor.configNominalOutputForward(0, 10);
 		this.angleMotor.configNominalOutputReverse(0, 10);
-		this.angleMotor.configPeakOutputForward(0.5, 10);
-		this.angleMotor.configPeakOutputReverse(-0.5, 10);
+		this.angleMotor.configPeakOutputForward(1.0, 10);
+		this.angleMotor.configPeakOutputReverse(-1.0, 10);
 		
 		this.angleMotor.setInverted(false);
 		this.angleMotor.setSensorPhase(true);
 		
-		this.angleMotor.configAllowableClosedloopError(0, 0, 10);
+		//this.angleMotor.configAllowableClosedloopError(0, 0, 10);
 		
 		this.angleMotor.config_kP(0, 0.6, 10);
 		this.angleMotor.config_kI(0, 0.001, 10);
@@ -58,6 +58,11 @@ public class WheelDrive {
 	
 	public void setDriveSpeed(double speed) {
 		driveSpeed = speed;
+	}
+	
+	public double getDriveSpeed()
+	{
+		return driveSpeed;
 	}
 	
 	public void stop()

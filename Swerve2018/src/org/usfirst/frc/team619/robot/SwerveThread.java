@@ -8,6 +8,7 @@ import static java.lang.Math.sqrt;
 import static java.lang.Math.toRadians;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.Joystick;
@@ -39,10 +40,23 @@ public class SwerveThread extends RobotThread {
 	private WheelDrive frontRight;
 	private WheelDrive frontLeft;
 	
-	private XboxController xbox = new XboxController(0);
-	private Joystick joystick = new Joystick(0);
+	//drive
+	private XboxController drive = new XboxController(0);
+	private Joystick driveJoystick = new Joystick(0);
+	
+	//secondary
+	private XboxController secondary = new XboxController(1);
+	private Joystick secondaryJoystick = new Joystick(1);
 	
 	boolean notMoving;
+	
+	//Manipulators
+	TalonSRX lift1;
+	TalonSRX lift2;
+	TalonSRX lift3;
+	
+	TalonSRX intakeLeft;
+	TalonSRX intakeRight;
 	
 	//NAVX
 	AHRS imu;
@@ -62,12 +76,20 @@ public class SwerveThread extends RobotThread {
 	
 	double speed;
 	
-	public SwerveThread(int period, ThreadManager threadManager, WheelDrive backRight, WheelDrive backLeft, WheelDrive frontRight, WheelDrive frontLeft) {
+	public SwerveThread(int period, ThreadManager threadManager, WheelDrive backRight, WheelDrive backLeft, WheelDrive frontRight, 
+						WheelDrive frontLeft, int l1, int l2, int l3, int il, int ir) {
 		super(period, threadManager);
 		this.backRight = backRight;
 		this.backLeft = backLeft;
 		this.frontRight = frontRight;
 		this.frontLeft = frontLeft;
+		
+		lift1 = new TalonSRX(l1);
+		lift2 = new TalonSRX(l2);
+		lift3 = new TalonSRX(l3);
+		
+		intakeLeft = new TalonSRX(il);
+		intakeRight = new TalonSRX(ir);
 		
 		wheelArray[0] = frontRight;
 		wheelArray[1] = frontLeft;
@@ -88,54 +110,106 @@ public class SwerveThread extends RobotThread {
 	
 	public void autoZero()
 	{
-		//frontright (0)
-		wheelArray[0].setTargetAngle(31);
-		wheelArray[0].goToAngle();
-		delay(2000);
-		//wheelArray[0].getRotateTalon().setSelectedSensorPosition(0, 0, 0);
+		/* IMPOSSIBLE TO AUTO ZERO
+		 * IMPOSSIBLE BECAUSE GEAR RATIO BELOW ENCODER (76:14)
+		 * SO THAT THE ENCODER DOES NOT KNOW HOW MANY SPINS IT HAS DONE, SO IT IT ALWAYS OFF BY 66 DEGREES MAX (360/(76/14))
+		 */
 		
-		//frontleft (1)
-		wheelArray[1].setTargetAngle(58);
-		wheelArray[1].goToAngle();
-		delay(2000);
-		//wheelArray[1].getRotateTalon().setSelectedSensorPosition(0, 0, 0);
-		
-		//backLeft (2)
-		wheelArray[2].setTargetAngle(55);
-		wheelArray[2].goToAngle();
-		delay(2000);
-		//wheelArray[2].getRotateTalon().setSelectedSensorPosition(0, 0, 0);
-		
-		//backRight (3)
-		wheelArray[3].setTargetAngle(27);
-		wheelArray[3].goToAngle();
-		delay(2000);
-		//wheelArray[3].getRotateTalon().setSelectedSensorPosition(0, 0, 0);
-		
-
+	}
+	
+	public void moveLift(double speed)
+	{
+		lift1.set(ControlMode.PercentOutput, speed);
+		lift2.set(ControlMode.PercentOutput, speed);
+		lift3.set(ControlMode.PercentOutput, speed);
+	}
+	
+	public void stopLift()
+	{
+		lift1.set(ControlMode.PercentOutput, 0);
+		lift2.set(ControlMode.PercentOutput, 0);
+		lift3.set(ControlMode.PercentOutput, 0);
+	}
+	
+	public void moveIntake(double speed)
+	{
+		intakeRight.set(ControlMode.PercentOutput, -speed);
+		intakeLeft.set(ControlMode.PercentOutput, -speed);
+	}
+	
+	public void stopIntake()
+	{
+		intakeRight.set(ControlMode.PercentOutput, 0);
+		intakeLeft.set(ControlMode.PercentOutput, 0);
 	}
 	
 	protected void cycle() {
-		double xAxis = deadzone(joystick.getRawAxis(1));
-        double yAxis = deadzone(joystick.getRawAxis(0));
-        double zTurn = deadzone(joystick.getRawAxis(4));
+		/*
+		 * Driver Controller
+		 * Functions:
+		 * Right Joystick - Turn
+		 * Left Joystick - Drive
+		 * X Button - Field Centric
+		 * A Button - Robot Centric
+		 * Right Bumper - 20% Speed
+		 * Dpad (Up/Down) - Speed Change (10% or -10%)
+		 * Trigger - Break
+		 * Both Bumpers - Turbo (100% Speed)
+		 */
+		double xAxis = deadzone(driveJoystick.getRawAxis(1));
+        double yAxis = deadzone(driveJoystick.getRawAxis(0));
+        double zTurn = deadzone(driveJoystick.getRawAxis(4));
 		
         move(xAxis, yAxis, zTurn);
         
-        if(xbox.getYButton())
-		{	
-			System.out.println("ZERO");
-			autoZero();
-		}
-        else if(xbox.getAButton())
+        if(drive.getAButton())
 		{
 			setRobotCentric();
 		}
-        else if(xbox.getXButton())
+        else if(drive.getXButton())
         {
         	setFieldCentric();
         }
         
+        /*
+         * Secondary Controller
+         * Functions:
+         * Left Joystick - Manual Lift
+         * Dpad (Up/Down) - Auto Lift
+         * B - Intake In
+         * Y - Intake Out
+         * A - Ramp Release
+         */
+//        //lift
+//        if(secondary.getYButton())
+//		{	
+//			moveLift(1);
+//		}
+//        else if(secondary.getBButton())
+//        {
+//        	moveLift(-0.5);
+//        }
+//        else
+//        {
+//        	stopLift();
+//        }
+        
+        //intake
+        if(secondary.getBButton())
+        {
+        	//intake
+        	moveIntake(0.5);
+        }
+        else if(secondary.getYButton())
+        {
+        	//outake
+        	moveIntake(-0.5);
+        }
+        else
+        {
+        	stopIntake();
+        }
+
         delay(50);
 	}
 
@@ -145,7 +219,7 @@ public class SwerveThread extends RobotThread {
         	drive(x1, y1, x2);
         } else if(isFieldCentric){
         	System.out.println("isFieldCentric");
-            getFieldCentric(-x1, y1, x2);
+            getFieldCentric(x1, y1, x2);
         }
 	}
 	
@@ -156,33 +230,22 @@ public class SwerveThread extends RobotThread {
 		if(!notMoving)
 		{
 			double r = Math.sqrt((L * L) + (W * W));
-			x1 *= -1;
 			
 			double a = x1 - x2 * (L/r);
 			double b = x1 + x2 * (L/r);
 			double c = y1 - x2 * (W/r);
-			double d = y1 + x2 * (W/r);
-			
-//			double backRightSpeed = Math.sqrt((a*a) + (d*d));
-//			double backLeftSpeed = Math.sqrt((a*a) + (c*c));
-//			double frontRightSpeed = Math.sqrt((b*b) + (d*d));
-//			double frontLeftSpeed = Math.sqrt((b*b) + (c*c));
-//			
-//			System.out.println("backRightSpeed: " + backRightSpeed);
-//			
+			double d = y1 + x2 * (W/r);	
 			
 	        double[] angles = new double[]{ atan2(b,c)*180/PI,
                     atan2(b,d)*180/PI,
                     atan2(a,d)*180/PI,
                     atan2(a,c)*180/PI };
-
-	        double[] speeds = new double[]{ sqrt(b*b+d*d),
-                    sqrt(b*b+c*c),
-                    sqrt(a*a+c*c),
-                    sqrt(a*a+d*d) };
-//			
-//			double[] speeds = {frontLeftSpeed, backLeftSpeed, frontRightSpeed, backRightSpeed};	
-			
+ 
+	        double[] speeds = new double[]{ sqrt(b*b+c*c),
+                    sqrt(b*b+d*d),
+                    sqrt(a*a+d*d),
+                    sqrt(a*a+c*c) };
+		
 	        double max = speeds[0];
 	        if ( speeds[1] > max ) max = speeds[1];
 	        if ( speeds[2] > max ) max = speeds[2];
@@ -195,30 +258,18 @@ public class SwerveThread extends RobotThread {
 	            speeds[3] /= max;
 	        }
 			
-//			double backRightAngle = ((Math.atan2(a, d) / Math.PI * 180) *-1) + 180;
-//			double backLeftAngle = ((Math.atan2(a, c) / Math.PI * 180) * -1) + 180;
-//			double frontRightAngle = ((Math.atan2(b, d) / Math.PI * 180) * -1) + 180;
-//			double frontLeftAngle = ((Math.atan2(b, c) / Math.PI * 180) * -1) + 180;
-//			
-//	        double backRightAngle = ((Math.atan2(a, d) / Math.PI * 180));
-//			double backLeftAngle = ((Math.atan2(a, c) / Math.PI * 180));
-//			double frontRightAngle = ((Math.atan2(b, d) / Math.PI * 180));
-//			double frontLeftAngle = ((Math.atan2(b, c) / Math.PI * 180));
-//			
-//			double[] angles = {(int)frontLeftAngle, (int)backLeftAngle, (int)frontRightAngle, (int)backRightAngle};
-
 			for( int i=0; i < wheelArray.length; i++ ) {
 				
 				wheelArray[i].setDriveSpeed(speeds[i]);
 	            wheelArray[i].setTargetAngle(angles[i]);
 	        }
 			
-			if(Math.abs(x2) > 0)
-			{
-				wheelArray[1].setDriveSpeed(-speeds[1]);
-				wheelArray[3].setDriveSpeed(-speeds[3]);
-			}
-			
+//			if(Math.abs(x2) > 0)
+//			{
+//				wheelArray[1].setDriveSpeed(-speeds[1]);
+//				wheelArray[3].setDriveSpeed(-speeds[3]);
+//			}
+//	
 	        for(int i = 0; i < wheelArray.length; i++)
 	        {
 	        	wheelArray[i].goToAngle();

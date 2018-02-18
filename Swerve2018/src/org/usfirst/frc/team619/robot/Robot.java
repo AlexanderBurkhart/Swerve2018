@@ -34,16 +34,16 @@ public class Robot extends IterativeRobot {
 	
 	//talons
 	//drive id: 4  turn id: 9
-	private WheelDrive backRight = new WheelDrive(9, 4);
+	private WheelDrive backRight = new WheelDrive(4, 5);
 	
 	//drive id: 7  turn id: 8
-	private WheelDrive backLeft = new WheelDrive(8, 7);
+	private WheelDrive backLeft = new WheelDrive(0, 1);
 	
 	//drive id: 6  turn id: 1
-	private WheelDrive frontRight = new WheelDrive(1, 6);
+	private WheelDrive frontRight = new WheelDrive(6, 7);
 	
 	//drive id: 10  turn id: 3
-	private WheelDrive frontLeft = new WheelDrive(3, 10);
+	private WheelDrive frontLeft = new WheelDrive(2, 3);
 	
 	WheelDrive[] wheels = {backRight, backLeft, frontRight, frontLeft};
 	
@@ -106,9 +106,9 @@ public class Robot extends IterativeRobot {
 	{
 		threadManager.killAllThreads();
 		
-		swerveThread = new SwerveThread(0, threadManager, backRight, backLeft, frontRight, frontLeft);
+		swerveThread = new SwerveThread(0, threadManager, backRight, backLeft, frontRight, frontLeft, 11, 12, 13, 10, 14);
 	}
-	
+	  
 	/**
 	 * This function is called periodically during operator control.
 	 */
@@ -117,6 +117,11 @@ public class Robot extends IterativeRobot {
 		//swerveDrive.drive(joystick.getRawAxis(1), joystick.getRawAxis(0), joystick.getRawAxis(4));
 		//System.out.println("CURRENT ANGLE: " + frontRight.getCurrentAngle());
 		//System.out.println("COMMAND POSITION: " + frontRight.getTargetAngle());
+		System.out.println("RR: " + backRight.getRotateTalon().getSelectedSensorPosition(0) + " " + backRight.getCurrentAngle());
+		System.out.println("RL: " + backLeft.getRotateTalon().getSelectedSensorPosition(0) + " " + backLeft.getCurrentAngle());
+		System.out.println("FL: " + frontLeft.getRotateTalon().getSelectedSensorPosition(0) + " " + frontLeft.getCurrentAngle());
+		System.out.println("FR: " + frontRight.getRotateTalon().getSelectedSensorPosition(0) + " " + frontRight.getCurrentAngle());
+		System.out.println();
 	}
 
 	/**
@@ -125,17 +130,16 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void testInit() {
 		threadManager.killAllThreads();
-		
 		//swerveThread = new SwerveThread(0, threadManager, backRight, backLeft, frontRight, frontLeft);
 		
 		System.out.println("testInit");
-//		testDrive(backRight, 0.25);
-//		testDrive(backLeft, 0.25);
-//		testDrive(frontRight, 0.25);
-//		testDrive(frontLeft, 0.25);
+//		testDrive(backRight, 1);
+//		testDrive(backLeft, 1);
+//		testDrive(frontRight, 1);
+//		testDrive(frontLeft, 1);
 //		testRotate(frontLeft);
 //		testRotate(frontRight);
-		testRotate(backRight);
+//		testRotate(backRight);
 //		testRotate(backLeft);
 //		calibrate(backRight);
 	}
@@ -145,7 +149,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void testPeriodic() {
-		System.out.println(backRight.getCurrentAngle() + " == " + backRight.getTargetAngle());
+		//System.out.println(backRight.getCurrentAngle() + " == " + backRight.getTargetAngle());
 	}
 	
 	@Override
@@ -181,7 +185,7 @@ public class Robot extends IterativeRobot {
     	wheel.setTargetAngle(90);
     	wheel.goToAngle();
     	System.out.println("goto: " + wheel.getTargetAngle());
-//    	delay(5000);
+//    	delay(3000);
     }
     
     public void calibrate(WheelDrive wheel)
