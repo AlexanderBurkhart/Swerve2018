@@ -80,6 +80,25 @@ public class TeleopThread extends RobotThread {
 	
 	SwerveDriveBase driveBase;
 	
+	/**
+	 * Constructor for teleop thread
+	 * @param period - threadManager variable
+	 * @param threadManager - threadManager object
+	 * 
+	 * @param backRight - wheelDrive object for back right
+	 * @param backLeft - wheelDrive object for back left
+	 * @param frontRight - wheelDrive object for front right
+	 * @param frontLeft - wheelDrive object for front left
+	 * 
+	 * @param l1 - variable index for lift 1
+	 * @param l2 - variable index for lift 2
+	 * @param l3 - variable index for lift 3
+	 * 
+	 * @param il - variable index for left intake
+	 * @param ir - variable index for right intake
+	 * 
+	 * @param iSwitch LimitSwitch object for limit switch
+	 */	
 	public TeleopThread(int period, ThreadManager threadManager, WheelDrive backRight, WheelDrive backLeft, WheelDrive frontRight, 
 						WheelDrive frontLeft, int l1, int l2, int l3, int il, int ir, LimitSwitch iSwitch) {
 		super(period, threadManager);
@@ -132,6 +151,10 @@ public class TeleopThread extends RobotThread {
 		
 	}
 	
+	/**
+	 * Controls speed of lift motor
+	 * @param speed - variable speed of motor
+	 */
 	public void moveLift(double speed)
 	{
 		lift1.set(ControlMode.PercentOutput, -speed);
@@ -139,6 +162,9 @@ public class TeleopThread extends RobotThread {
 		lift3.set(ControlMode.PercentOutput, speed);
 	}
 	
+	/**
+	 * Stops lift 
+	 */
 	public void stopLift()
 	{
 		lift1.set(ControlMode.PercentOutput, 0);
@@ -146,6 +172,10 @@ public class TeleopThread extends RobotThread {
 		lift3.set(ControlMode.PercentOutput, 0);
 	}
 	
+	/**
+	 * Controls speed and direction of intake motors
+	 * @param speed
+	 */
 	public void moveIntake(double speed)
 	{
 		//- for intakeright is in
@@ -163,12 +193,18 @@ public class TeleopThread extends RobotThread {
 		intakeLeft.set(ControlMode.PercentOutput, speed);
 	}
 	
+	/**
+	 * Stops intake
+	 */
 	public void stopIntake()
 	{
 		intakeRight.set(ControlMode.PercentOutput, 0);
 		intakeLeft.set(ControlMode.PercentOutput, 0);
 	}
 	
+	/**
+	 * refreshes inputs continuously
+	 */
 	protected void cycle() {
 		/*
 		 * Driver Controller
@@ -238,7 +274,13 @@ public class TeleopThread extends RobotThread {
 
         delay(50);
 	}
-
+	
+	/**
+	 * calls driveBase to move swerve modules
+	 * @param x1 - double x axis of right joystick
+	 * @param y1 - double y axis of right joystick
+	 * @param x2 - double x axis of left joystick
+	 */
 	public void move(double x1, double y1, double x2)
 	{
 		if(isRobotCentric){
@@ -262,12 +304,21 @@ public class TeleopThread extends RobotThread {
 		isRobotCentric = true;
 	}
 	
+	/**
+	 * sets val below 0.06 to zero
+	 * @param val - variable input
+	 * @return
+	 */
 	private double deadzone(double val) {
 		if(Math.abs(val) < 0.06)
 			return 0;
 		return val;
 	}
 	
+	/**
+	 * Delays thread in milliseconds
+	 * @param milliseconds - variable time to delay in ms 
+	 */
     public void delay(int milliseconds){
     	try {
     		Thread.sleep(milliseconds);
