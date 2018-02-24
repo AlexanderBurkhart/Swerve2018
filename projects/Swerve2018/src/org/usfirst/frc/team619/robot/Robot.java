@@ -31,8 +31,8 @@ public class Robot extends IterativeRobot {
 	
 	ThreadManager threadManager;
 	TeleopThread swerveThread;
-	
 	AutoThread autoThread;
+	
 	
 	//talons
 	//drive id: 4  turn id: 9
@@ -49,7 +49,7 @@ public class Robot extends IterativeRobot {
 	
 	WheelDrive[] wheels = {backRight, backLeft, frontRight, frontLeft};
 	
-	LimitSwitch intakeSwitch;
+	LimitSwitch intakeSwitch = new LimitSwitch(0);
 	
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -60,8 +60,6 @@ public class Robot extends IterativeRobot {
 		m_chooser.addDefault("Default Auto", kDefaultAuto);
 		m_chooser.addObject("My Auto", kCustomAuto);
 		SmartDashboard.putData("Auto choices", m_chooser);
-		
-		intakeSwitch = new LimitSwitch(0);
 		
 		threadManager = new ThreadManager();
 	}
@@ -81,7 +79,7 @@ public class Robot extends IterativeRobot {
 	public void autonomousInit() {
 		threadManager.killAllThreads();
 		
-		autoThread = new AutoThread(0, threadManager, backRight, backLeft, frontRight, frontLeft);
+		autoThread = new AutoThread(0, threadManager, backRight, backLeft, frontRight, frontLeft);	
 	}
 
 	/**
@@ -120,11 +118,11 @@ public class Robot extends IterativeRobot {
 		//swerveDrive.drive(joystick.getRawAxis(1), joystick.getRawAxis(0), joystick.getRawAxis(4));
 		//System.out.println("CURRENT ANGLE: " + frontRight.getCurrentAngle());
 		//System.out.println("COMMAND POSITION: " + frontRight.getTargetAngle());
-		System.out.println("RR: " + backRight.getRotateTalon().getSelectedSensorPosition(0) + " " + backRight.getCurrentAngle());
-		System.out.println("RL: " + backLeft.getRotateTalon().getSelectedSensorPosition(0) + " " + backLeft.getCurrentAngle());
-		System.out.println("FL: " + frontLeft.getRotateTalon().getSelectedSensorPosition(0) + " " + frontLeft.getCurrentAngle());
-		System.out.println("FR: " + frontRight.getRotateTalon().getSelectedSensorPosition(0) + " " + frontRight.getCurrentAngle());
-		System.out.println();
+//		System.out.println("RR: " + backRight.getRotateTalon().getSelectedSensorPosition(0) + " " + backRight.getCurrentAngle());
+//		System.out.println("RL: " + backLeft.getRotateTalon().getSelectedSensorPosition(0) + " " + backLeft.getCurrentAngle());
+//		System.out.println("FL: " + frontLeft.getRotateTalon().getSelectedSensorPosition(0) + " " + frontLeft.getCurrentAngle());
+//		System.out.println("FR: " + frontRight.getRotateTalon().getSelectedSensorPosition(0) + " " + frontRight.getCurrentAngle());
+//		System.out.println();
 	}
 
 	/**
@@ -140,10 +138,10 @@ public class Robot extends IterativeRobot {
 //		testDrive(backLeft, 1);
 //		testDrive(frontRight, 1);
 //		testDrive(frontLeft, 1);
-		testRotate(frontLeft);
-		testRotate(frontRight);
-		testRotate(backRight);
-		testRotate(backLeft);
+//		testRotate(frontLeft);
+//		testRotate(frontRight);
+//		testRotate(backRight);
+//		testRotate(backLeft);
 //		calibrate(backRight);
 	}
 	

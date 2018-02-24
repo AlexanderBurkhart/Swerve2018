@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj.GenericHID.Hand;
 
 //import org.usfirst.frc.team619.subsystems.GripPipeline;
 
-public class SwerveThread extends RobotThread {
+public class TeleopThread extends RobotThread {
 	
 	int currentAngle, targetAngle;
 	WheelDrive[] wheelArray = new WheelDrive[4];
@@ -76,8 +76,12 @@ public class SwerveThread extends RobotThread {
 	
 	double speed;
 	
-	public SwerveThread(int period, ThreadManager threadManager, WheelDrive backRight, WheelDrive backLeft, WheelDrive frontRight, 
-						WheelDrive frontLeft, int l1, int l2, int l3, int il, int ir) {
+	LimitSwitch intakeSwitch;
+	
+	SwerveDriveBase driveBase;
+	
+	public TeleopThread(int period, ThreadManager threadManager, WheelDrive backRight, WheelDrive backLeft, WheelDrive frontRight, 
+						WheelDrive frontLeft, int l1, int l2, int l3, int il, int ir, LimitSwitch iSwitch) {
 		super(period, threadManager);
 		this.backRight = backRight;
 		this.backLeft = backLeft;
@@ -88,8 +92,15 @@ public class SwerveThread extends RobotThread {
 		lift2 = new TalonSRX(l2);
 		lift3 = new TalonSRX(l3);
 		
+		currentLimit(lift1, 35, 40);
+		currentLimit(lift2, 35, 40);
+		currentLimit(lift3, 35, 40);
+		
 		intakeLeft = new TalonSRX(il);
 		intakeRight = new TalonSRX(ir);
+		
+		currentLimit(intakeLeft, 25, 30);
+		currentLimit(intakeRight, 25, 30);
 		
 		wheelArray[0] = frontRight;
 		wheelArray[1] = frontLeft;
@@ -105,6 +116,10 @@ public class SwerveThread extends RobotThread {
 		isRobotCentric = true;
 		isFieldCentric = false;
 		
+		intakeSwitch = iSwitch;
+		
+		driveBase = new SwerveDriveBase(backRight, backLeft, frontRight, frontLeft);
+		
 		start();
 	}
 	
@@ -119,7 +134,7 @@ public class SwerveThread extends RobotThread {
 	
 	public void moveLift(double speed)
 	{
-		lift1.set(ControlMode.PercentOutput, speed);
+		lift1.set(ControlMode.PercentOutput, -speed);
 		lift2.set(ControlMode.PercentOutput, speed);
 		lift3.set(ControlMode.PercentOutput, speed);
 	}
@@ -133,8 +148,19 @@ public class SwerveThread extends RobotThread {
 	
 	public void moveIntake(double speed)
 	{
-		intakeRight.set(ControlMode.PercentOutput, -speed);
-		intakeLeft.set(ControlMode.PercentOutput, -speed);
+		//- for intakeright is in
+		//+ for intakeleft is in
+		
+		System.out.println(intakeSwitch.get());
+		if(intakeSwitch.get() == true)
+		{
+			intakeRight.set(ControlMode.PercentOutput, speed/2);	
+		}
+		else
+		{
+			intakeRight.set(ControlMode.PercentOutput, -speed);
+		}
+		intakeLeft.set(ControlMode.PercentOutput, speed);
 	}
 	
 	public void stopIntake()
@@ -180,19 +206,19 @@ public class SwerveThread extends RobotThread {
          * Y - Intake Out
          * A - Ramp Release
          */
-//        //lift
-//        if(secondary.getYButton())
-//		{	
-//			moveLift(1);
-//		}
-//        else if(secondary.getBButton())
-//        {
-//        	moveLift(-0.5);
-//        }
-//        else
-//        {
-//        	stopLift();
-//        }
+        //lift
+        if(secondary.getPOV() == 0)
+		{	
+			moveLift(1);
+		}
+        else if(secondary.getPOV() == 180)
+        {
+        	moveLift(-0.5);
+        }
+        else
+        {
+        	stopLift();
+        }
         
         //intake
         if(secondary.getBButton())
@@ -216,75 +242,11 @@ public class SwerveThread extends RobotThread {
 	public void move(double x1, double y1, double x2)
 	{
 		if(isRobotCentric){
-        	drive(x1, y1, x2);
+        	driveBase.drive(-x1, y1, -x2);
         } else if(isFieldCentric){
         	System.out.println("isFieldCentric");
-            getFieldCentric(x1, y1, x2);
+            driveBase.getFieldCentric(x1, y1, x2);
         }
-	}
-	
-	public void drive(double x1, double y1, double x2) 
-	{
-		notMoving = x1 == 0 && y1 == 0 && x2 == 0;
-		
-		if(!notMoving)
-		{
-			double r = Math.sqrt((L * L) + (W * W));
-			
-			double a = x1 - x2 * (L/r);
-			double b = x1 + x2 * (L/r);
-			double c = y1 - x2 * (W/r);
-			double d = y1 + x2 * (W/r);	
-			
-	        double[] angles = new double[]{ atan2(b,c)*180/PI,
-                    atan2(b,d)*180/PI,
-                    atan2(a,d)*180/PI,
-                    atan2(a,c)*180/PI };
- 
-	        double[] speeds = new double[]{ sqrt(b*b+c*c),
-                    sqrt(b*b+d*d),
-                    sqrt(a*a+d*d),
-                    sqrt(a*a+c*c) };
-		
-	        double max = speeds[0];
-	        if ( speeds[1] > max ) max = speeds[1];
-	        if ( speeds[2] > max ) max = speeds[2];
-	        if ( speeds[3] > max ) max = speeds[3];
-	        
-	        if ( max > 1 ) {
-	            speeds[0] /= max;
-	            speeds[1] /= max;
-	            speeds[2] /= max;
-	            speeds[3] /= max;
-	        }
-			
-			for( int i=0; i < wheelArray.length; i++ ) {
-				
-				wheelArray[i].setDriveSpeed(speeds[i]);
-	            wheelArray[i].setTargetAngle(angles[i]);
-	        }
-			
-//			if(Math.abs(x2) > 0)
-//			{
-//				wheelArray[1].setDriveSpeed(-speeds[1]);
-//				wheelArray[3].setDriveSpeed(-speeds[3]);
-//			}
-//	
-	        for(int i = 0; i < wheelArray.length; i++)
-	        {
-	        	wheelArray[i].goToAngle();
-	            wheelArray[i].drive();
-	        }
-		}
-		else
-		{
-			for(int i = 0; i < wheelArray.length; i++)
-	        {
-	        	wheelArray[i].stop();
-	        }
-		}
-        	
-		
 	}
 	
 	//states
@@ -300,28 +262,6 @@ public class SwerveThread extends RobotThread {
 		isRobotCentric = true;
 	}
 	
-    public void getFieldCentric( double x1, double y1, double x2 ) {
-    	System.out.println("I'm in");
-        // correspondence to paper http://www.chiefdelphi.com/media/papers/download/3028
-        //     RY  <=>   FWD
-        //     RX  <=>   STR
-        //     LX  <=>   RCW
-
-        //  imu.getYaw( ) returns angle between -180 and 180
-        double theta = imu.getYaw( );
-        //System.out.println("Theta: " + theta);
-        while ( theta < 0 ) theta += 360;
-        if(x2 != 0)
-        	targetHeading = theta;
-        theta = toRadians(theta);
-        double temp = y1*cos(theta) + x1*sin(theta);
-        x1 = -y1*sin(theta) + x1*cos(theta);
-        y1 = temp;
-
-        drive(x1, y1, x2);
-    }
-
-	
 	private double deadzone(double val) {
 		if(Math.abs(val) < 0.06)
 			return 0;
@@ -335,4 +275,18 @@ public class SwerveThread extends RobotThread {
     		Thread.currentThread().interrupt();
     	}
     }
+    
+	/**
+	 * Limits current to selected motor
+	 * @param talon - TalonSRX object
+	 * @param continousLimit - variable limit of current
+	 * @param currentLimit - variable limit of peak
+	 */
+	public void currentLimit(TalonSRX talon, int continuousLimit, int currentLimit) {
+		talon.configContinuousCurrentLimit(continuousLimit, 0);
+		talon.configPeakCurrentLimit(currentLimit, 0);
+		talon.configPeakCurrentDuration(100, 0);
+		talon.enableCurrentLimit(true);
+
+	}
 }

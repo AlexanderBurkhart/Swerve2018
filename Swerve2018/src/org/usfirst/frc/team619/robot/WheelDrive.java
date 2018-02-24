@@ -47,7 +47,8 @@ public class WheelDrive {
 		this.angleMotor.config_kI(0, 0.001, 10);
 		this.angleMotor.config_kD(0, 10, 10);
 
-		
+		currentLimit(this.angleMotor, 25, 30);
+		currentLimit(this.speedMotor, 35, 40);
 	}
 	
 	//DRIVE METHODS
@@ -154,5 +155,18 @@ public class WheelDrive {
 		return speedMotor;
 	}
 
+	/**
+	 * Limits current to selected motor
+	 * @param talon - TalonSRX object
+	 * @param continousLimit - variable limit of current
+	 * @param currentLimit - variable limit of peak
+	 */
+	public void currentLimit(TalonSRX talon, int continuousLimit, int currentLimit) {
+		talon.configContinuousCurrentLimit(continuousLimit, 0);
+		talon.configPeakCurrentLimit(currentLimit, 0);
+		talon.configPeakCurrentDuration(100, 0);
+		talon.enableCurrentLimit(true);
+
+	}
 	
 }
