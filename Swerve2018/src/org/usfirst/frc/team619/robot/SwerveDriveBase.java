@@ -97,23 +97,29 @@ public class SwerveDriveBase {
 	        if ( speeds[3] > max ) max = speeds[3];
 	        
 	        if ( max > 1 ) {
-	            speeds[0] /= max;
-	            speeds[1] /= max;
-	            speeds[2] /= max;
-	            speeds[3] /= max;
+	            speeds[0] = max; //was dividing
+	            speeds[1] = max;
+	            speeds[2] = max;
+	            speeds[3] = max;
 	        }
 			
-			for( int i=0; i < wheelArray.length; i++ ) {
-				
-				wheelArray[i].setDriveSpeed(speeds[i]);
-	            wheelArray[i].setTargetAngle(angles[i]);
-	        }
-			
+	        //drive speed
+	        wheelArray[0].setDriveSpeed(speeds[0]);
+			wheelArray[2].setDriveSpeed(speeds[2]);
 			if(Math.abs(x2) > 0)
 			{
 				wheelArray[1].setDriveSpeed(-speeds[1]);
 				wheelArray[3].setDriveSpeed(-speeds[3]);
 			}
+			else
+			{
+				wheelArray[1].setDriveSpeed(speeds[1]);
+				wheelArray[3].setDriveSpeed(speeds[3]);
+			}
+	        
+			for( int i=0; i < wheelArray.length; i++ ) {	
+	            wheelArray[i].setTargetAngle(angles[i]);
+	        }
 	
 	        for(int i = 0; i < wheelArray.length; i++)
 	        {
@@ -128,7 +134,7 @@ public class SwerveDriveBase {
 	        	wheelArray[i].stop();
 	        }
 		} 	
-	}
+	} 
 	
 	/**
 	 * sets field centric
@@ -155,7 +161,7 @@ public class SwerveDriveBase {
 	 * @param x2 - z axis (right joystick)
 	 */
     public void getFieldCentric( double x1, double y1, double x2 ) {
-    	System.out.println("I'm in");
+    	//System.out.println("I'm in");
         // correspondence to paper http://www.chiefdelphi.com/media/papers/download/3028
         //     RY  <=>   FWD
         //     RX  <=>   STR
@@ -163,11 +169,12 @@ public class SwerveDriveBase {
 
         //  imu.getYaw( ) returns angle between -180 and 180
         double theta = imu.getYaw( );
+        System.out.println("theta: " + theta);
         //System.out.println("Theta: " + theta);
-        while ( theta < 0 ) theta += 360;
+        while ( theta < 0 ) theta += 360; //COMMENT THIS OUT AGAIN IF IT SCREWS UP
         if(x2 != 0)
         	targetHeading = theta;
-        theta = toRadians(theta);
+        theta = -toRadians(theta); //CHANGE THIS TO NEGATIVE IF IT SCEWS UP
         double temp = y1*cos(theta) + x1*sin(theta);
         x1 = -y1*sin(theta) + x1*cos(theta);
         y1 = temp;

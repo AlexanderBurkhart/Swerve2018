@@ -76,9 +76,12 @@ public class TeleopThread extends RobotThread {
 	
 	double speed;
 	
-	LimitSwitch intakeSwitch;
-	
 	SwerveDriveBase driveBase;
+	
+	//Manipulators
+	Lift lift;
+	Intake intake;
+	Ramp ramp;
 	
 	/**
 	 * Constructor for teleop thread
@@ -100,26 +103,16 @@ public class TeleopThread extends RobotThread {
 	 * @param iSwitch LimitSwitch object for limit switch
 	 */	
 	public TeleopThread(int period, ThreadManager threadManager, WheelDrive backRight, WheelDrive backLeft, WheelDrive frontRight, 
-						WheelDrive frontLeft, int l1, int l2, int l3, int il, int ir, LimitSwitch iSwitch) {
+						WheelDrive frontLeft, Lift l, Intake i, Ramp r) {
 		super(period, threadManager);
 		this.backRight = backRight;
 		this.backLeft = backLeft;
 		this.frontRight = frontRight;
 		this.frontLeft = frontLeft;
 		
-		lift1 = new TalonSRX(l1);
-		lift2 = new TalonSRX(l2);
-		lift3 = new TalonSRX(l3);
-		
-		currentLimit(lift1, 35, 40);
-		currentLimit(lift2, 35, 40);
-		currentLimit(lift3, 35, 40);
-		
-		intakeLeft = new TalonSRX(il);
-		intakeRight = new TalonSRX(ir);
-		
-		currentLimit(intakeLeft, 25, 30);
-		currentLimit(intakeRight, 25, 30);
+		lift = l;
+		intake = i;
+		ramp = r;
 		
 		wheelArray[0] = frontRight;
 		wheelArray[1] = frontLeft;
@@ -135,8 +128,6 @@ public class TeleopThread extends RobotThread {
 		isRobotCentric = true;
 		isFieldCentric = false;
 		
-		intakeSwitch = iSwitch;
-		
 		driveBase = new SwerveDriveBase(backRight, backLeft, frontRight, frontLeft);
 		
 		start();
@@ -149,57 +140,6 @@ public class TeleopThread extends RobotThread {
 		 * SO THAT THE ENCODER DOES NOT KNOW HOW MANY SPINS IT HAS DONE, SO IT IT ALWAYS OFF BY 66 DEGREES MAX (360/(76/14))
 		 */
 		
-	}
-	
-	/**
-	 * Controls speed of lift motor
-	 * @param speed - variable speed of motor
-	 */
-	public void moveLift(double speed)
-	{
-		lift1.set(ControlMode.PercentOutput, -speed);
-		lift2.set(ControlMode.PercentOutput, speed);
-		lift3.set(ControlMode.PercentOutput, speed);
-	}
-	
-	/**
-	 * Stops lift 
-	 */
-	public void stopLift()
-	{
-		lift1.set(ControlMode.PercentOutput, 0);
-		lift2.set(ControlMode.PercentOutput, 0);
-		lift3.set(ControlMode.PercentOutput, 0);
-	}
-	
-	/**
-	 * Controls speed and direction of intake motors
-	 * @param speed
-	 */
-	public void moveIntake(double speed)
-	{
-		//- for intakeright is in
-		//+ for intakeleft is in
-		
-		System.out.println(intakeSwitch.get());
-		if(intakeSwitch.get() == true)
-		{
-			intakeRight.set(ControlMode.PercentOutput, speed/2);	
-		}
-		else
-		{
-			intakeRight.set(ControlMode.PercentOutput, -speed);
-		}
-		intakeLeft.set(ControlMode.PercentOutput, speed);
-	}
-	
-	/**
-	 * Stops intake
-	 */
-	public void stopIntake()
-	{
-		intakeRight.set(ControlMode.PercentOutput, 0);
-		intakeLeft.set(ControlMode.PercentOutput, 0);
 	}
 	
 	/**
@@ -218,11 +158,16 @@ public class TeleopThread extends RobotThread {
 		 * Trigger - Break
 		 * Both Bumpers - Turbo (100% Speed)
 		 */
-		double xAxis = deadzone(driveJoystick.getRawAxis(1));
-        double yAxis = deadzone(driveJoystick.getRawAxis(0));
-        double zTurn = deadzone(driveJoystick.getRawAxis(4));
-		
-        move(xAxis, yAxis, zTurn);
+		double xAxis = deadzone(drive.getX(Hand.kRight));
+        double yAxis = deadzone(drive.getY(Hand.kRight));
+        double zTurn = deadzone(drive.getX(Hand.kLeft));
+        
+//        System.out.println("xAxis: " + xAxis);
+//        System.out.println("yAxis: " + yAxis);
+//        System.out.println("zTurn: " + zTurn);
+//        System.out.println();
+        
+        System.out.println(imu.getYaw());
         
         if(drive.getAButton())
 		{
@@ -232,6 +177,84 @@ public class TeleopThread extends RobotThread {
         {
         	setFieldCentric();
         }
+        else if(drive.getYButton())
+        {
+        	double backLeftAng = -23 + -imu.getYaw();
+        	
+        	if(backLeftAng > 180)
+        	{
+        		backLeftAng -= 360;
+        	}
+        	else if(backLeftAng < -180)
+        	{
+        		backLeftAng += 360;
+        	}
+        	
+        	backLeft.setTargetAngle(backLeftAng);
+        	backLeft.goToAngle();
+        	backLeft.setDriveSpeed(1);
+        	backLeft.drive();
+        	
+        	double frontLeftAng = 113 + -imu.getYaw();
+        	
+        	if(frontLeftAng > 180)
+        	{
+        		System.out.println("IMMMMMMMMMFSD L KFD JKHLJDFLK ");
+        		frontLeftAng -= 360;
+        	}
+        	else if(frontLeftAng < -180)
+        	{
+        		System.out.println("IMMMMMMMMMFSD L KFD JKHLJDFLK ");
+        		frontLeftAng += 360;
+        	}
+        	
+        	frontLeft.setTargetAngle(frontLeftAng);
+        	frontLeft.goToAngle();
+        	frontLeft.setDriveSpeed(-1);
+        	frontLeft.drive();
+        	
+        	double frontRightAng = 67 + -imu.getYaw();
+        	
+        	if(frontRightAng > 180)
+        	{
+        		System.out.println("IMMMMMMMMMFSD L KFD JKHLJDFLK ");
+        		frontRightAng -= 360;
+        	}
+        	else if(frontRightAng < -180)
+        	{
+        		System.out.println("IMMMMMMMMMFSD L KFD JKHLJDFLK ");
+        		frontRightAng += 360;
+        	}
+        	
+        	frontRight.setTargetAngle(frontRightAng);
+        	frontRight.goToAngle();
+        	frontRight.setDriveSpeed(1);
+        	frontRight.drive();
+        	
+        	double backRightAngle = 23 + -imu.getYaw();
+        	
+        	if(backRightAngle > 180)
+        	{
+        		backRightAngle -= 360;
+        	}
+        	else if(backRightAngle < -180)
+        	{
+        		backRightAngle += 360;
+        	}
+        	
+        	backRight.setTargetAngle(backRightAngle);
+        	backRight.goToAngle();
+        	backRight.setDriveSpeed(-1);
+        	backRight.drive();
+        }
+        else if(drive.getBumper(Hand.kRight))
+        {
+        	xAxis *= 0.2;
+        	yAxis *= 0.2;
+        	zTurn *= 0.4;
+        }
+        
+        move(xAxis, yAxis, zTurn);
         
         /*
          * Secondary Controller
@@ -245,31 +268,42 @@ public class TeleopThread extends RobotThread {
         //lift
         if(secondary.getPOV() == 0)
 		{	
-			moveLift(1);
+			lift.moveLift(1);
 		}
         else if(secondary.getPOV() == 180)
         {
-        	moveLift(-0.5);
+        	lift.moveLift(-0.5);
         }
         else
         {
-        	stopLift();
+        	lift.stopLift();
         }
         
         //intake
         if(secondary.getBButton())
         {
         	//intake
-        	moveIntake(0.5);
+        	intake.moveIntake(0.5);
         }
         else if(secondary.getYButton())
         {
         	//outake
-        	moveIntake(-0.5);
+        	intake.moveIntake(-0.5);
+        }
+        else if(secondary.getXButton())
+        {
+        	//ramp windup
+        	ramp.windUp();
+        }
+        else if(secondary.getAButton())
+        {
+        	//ramp winddown
+        	ramp.windDown();
         }
         else
         {
-        	stopIntake();
+        	ramp.stop();
+        	intake.stopIntake();
         }
 
         delay(50);
@@ -284,10 +318,10 @@ public class TeleopThread extends RobotThread {
 	public void move(double x1, double y1, double x2)
 	{
 		if(isRobotCentric){
-        	driveBase.drive(-x1, y1, -x2);
+        	driveBase.drive(-y1, x1, -x2);
         } else if(isFieldCentric){
-        	System.out.println("isFieldCentric");
-            driveBase.getFieldCentric(x1, y1, x2);
+        	//System.out.println("isFieldCentric");
+            driveBase.getFieldCentric(-x1, -y1, -x2);
         }
 	}
 	

@@ -49,7 +49,22 @@ public class Robot extends IterativeRobot {
 	
 	WheelDrive[] wheels = {backRight, backLeft, frontRight, frontLeft};
 	
+	Lift lift;
+	TalonSRX lift1, lift2, lift3;
+	
+	Intake intake;
+	TalonSRX intakeRight, intakeLeft;
+	
+	Ramp ramp;
+	TalonSRX rampRelease;
+	
+	//Limit switches
 	LimitSwitch intakeSwitch;
+	
+	//auto switches
+	LimitSwitch[] autoSwitches = new LimitSwitch[4];
+	
+	AnalogUltrasonic[] ultrasonics = new AnalogUltrasonic[2];
 	
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -62,6 +77,38 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putData("Auto choices", m_chooser);
 		
 		intakeSwitch = new LimitSwitch(0);
+		for(int i = 1; i <= 4; i++)
+		{
+			LimitSwitch autoSwitch = new LimitSwitch(i);
+			autoSwitches[i-1] = autoSwitch;
+		}
+		
+		ultrasonics[0] = new AnalogUltrasonic(0);
+		ultrasonics[1] = new AnalogUltrasonic(1);
+		
+		rampRelease = new TalonSRX(9);
+		
+		currentLimit(rampRelease, 35, 40);
+		
+		ramp = new Ramp(rampRelease);
+		
+		lift1 = new TalonSRX(11);
+		lift2 = new TalonSRX(12);
+		lift3 = new TalonSRX(13);
+			
+		currentLimit(lift1, 35, 40);
+		currentLimit(lift2, 35, 40);
+		currentLimit(lift3, 35, 40);
+		
+		lift = new Lift(lift1, lift2, lift3);
+		
+		intakeLeft = new TalonSRX(10);
+		intakeRight = new TalonSRX(14);
+		
+		currentLimit(intakeLeft, 25, 30);
+		currentLimit(intakeRight, 25, 30);
+		
+		intake = new Intake(intakeLeft, intakeRight, intakeSwitch);
 		
 		threadManager = new ThreadManager();
 	}
@@ -81,7 +128,7 @@ public class Robot extends IterativeRobot {
 	public void autonomousInit() {
 		threadManager.killAllThreads();
 		
-		autoThread = new AutoThread(0, threadManager, backRight, backLeft, frontRight, frontLeft);
+		autoThread = new AutoThread(0, threadManager, backRight, backLeft, frontRight, frontLeft, lift, intake, autoSwitches, ultrasonics);
 	}
 
 	/**
@@ -89,16 +136,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		threadManager.killAllThreads();
-		switch (m_autoSelected) {
-			case kCustomAuto:
-				// Put custom auto code here
-				break;
-			case kDefaultAuto:
-			default:
-				// Put default auto code here
-				break;
-		}
+		
 	}
 
 	private Joystick joystick = new Joystick(0);
@@ -109,7 +147,7 @@ public class Robot extends IterativeRobot {
 	{
 		threadManager.killAllThreads();
 		
-		swerveThread = new TeleopThread(0, threadManager, backRight, backLeft, frontRight, frontLeft, 11, 12, 13, 10, 14, intakeSwitch);
+		swerveThread = new TeleopThread(0, threadManager, backRight, backLeft, frontRight, frontLeft, lift, intake, ramp);
 	}
 	  
 	/**
@@ -120,11 +158,11 @@ public class Robot extends IterativeRobot {
 		//swerveDrive.drive(joystick.getRawAxis(1), joystick.getRawAxis(0), joystick.getRawAxis(4));
 		//System.out.println("CURRENT ANGLE: " + frontRight.getCurrentAngle());
 		//System.out.println("COMMAND POSITION: " + frontRight.getTargetAngle());
-		System.out.println("RR: " + backRight.getRotateTalon().getSelectedSensorPosition(0) + " " + backRight.getCurrentAngle());
-		System.out.println("RL: " + backLeft.getRotateTalon().getSelectedSensorPosition(0) + " " + backLeft.getCurrentAngle());
-		System.out.println("FL: " + frontLeft.getRotateTalon().getSelectedSensorPosition(0) + " " + frontLeft.getCurrentAngle());
-		System.out.println("FR: " + frontRight.getRotateTalon().getSelectedSensorPosition(0) + " " + frontRight.getCurrentAngle());
-		System.out.println();
+//		System.out.println("RR: " + backRight.getRotateTalon().getSelectedSensorPosition(0) + " " + backRight.getCurrentAngle());
+//		System.out.println("RL: " + backLeft.getRotateTalon().getSelectedSensorPosition(0) + " " + backLeft.getCurrentAngle());
+//		System.out.println("FL: " + frontLeft.getRotateTalon().getSelectedSensorPosition(0) + " " + frontLeft.getCurrentAngle());
+//		System.out.println("FR: " + frontRight.getRotateTalon().getSelectedSensorPosition(0) + " " + frontRight.getCurrentAngle());
+//		System.out.println();
 	}
 
 	/**
@@ -136,10 +174,10 @@ public class Robot extends IterativeRobot {
 		//swerveThread = new SwerveThread(0, threadManager, backRight, backLeft, frontRight, frontLeft);
 		
 		System.out.println("testInit");
-//		testDrive(backRight, 1);
-//		testDrive(backLeft, 1);
-//		testDrive(frontRight, 1);
-//		testDrive(frontLeft, 1);
+		testDrive(backRight, 1);
+		testDrive(backLeft, 1);
+		testDrive(frontRight, 1);
+		testDrive(frontLeft, 1);
 		testRotate(frontLeft);
 		testRotate(frontRight);
 		testRotate(backRight);
@@ -188,7 +226,7 @@ public class Robot extends IterativeRobot {
     	wheel.setTargetAngle(90);
     	wheel.goToAngle();
     	System.out.println("goto: " + wheel.getTargetAngle());
-//    	delay(3000);
+    	delay(3000);
     }
     
     public void calibrate(WheelDrive wheel)
@@ -209,5 +247,19 @@ public class Robot extends IterativeRobot {
     		Thread.currentThread().interrupt();
     	}
     }
+    
+	/**
+	 * Limits current to selected motor
+	 * @param talon - TalonSRX object
+	 * @param continousLimit - variable limit of current
+	 * @param currentLimit - variable limit of peak
+	 */
+	public void currentLimit(TalonSRX talon, int continuousLimit, int currentLimit) {
+		talon.configContinuousCurrentLimit(continuousLimit, 0);
+		talon.configPeakCurrentLimit(currentLimit, 0);
+		talon.configPeakCurrentDuration(100, 0);
+		talon.enableCurrentLimit(true);
+
+	}
     
 }
