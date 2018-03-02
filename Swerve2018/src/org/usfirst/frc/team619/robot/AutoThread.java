@@ -59,7 +59,7 @@ public class AutoThread extends RobotThread{
 		gameData =  DriverStation.getInstance().getGameSpecificMessage();
 		
 		//REMOVE WHEN DONE TESTING
-		gameData = "RLR";
+		//gameData = "RLR";
 		
 		side = Character.toString(gameData.charAt(0));
 		
