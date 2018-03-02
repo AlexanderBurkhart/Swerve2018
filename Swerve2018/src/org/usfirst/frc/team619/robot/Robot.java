@@ -136,7 +136,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		
+		//
 	}
 
 	private Joystick joystick = new Joystick(0);
@@ -190,6 +190,8 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void testPeriodic() {
+		System.out.println("ultra0: " + ultrasonics[0].getDistanceIn());
+		System.out.println("ultra1: " + ultrasonics[1].getDistanceIn());
 		//System.out.println(backRight.getCurrentAngle() + " == " + backRight.getTargetAngle());
 	}
 	

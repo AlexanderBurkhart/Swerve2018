@@ -56,6 +56,9 @@ public class AutoThread extends RobotThread{
 		gameData =  DriverStation.getInstance().getGameSpecificMessage();
 		side = Character.toString(gameData.charAt(0));
 		
+		//REMOVE WHEN DONE TESTING
+		side = "L";
+		
 		configure();
 		start();
 	}
@@ -230,7 +233,7 @@ public class AutoThread extends RobotThread{
 	 */
 	public boolean closeToObject()
 	{
-		return (ultrasonics[0].getDistanceIn() > 20 && ultrasonics[1].getDistanceIn() > 20);
+		return (ultrasonics[0].getDistanceIn() < 80 && ultrasonics[1].getDistanceIn() < 80);
 	}
 	
 	/**
