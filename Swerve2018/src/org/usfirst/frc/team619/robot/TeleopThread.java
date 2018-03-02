@@ -254,7 +254,7 @@ public class TeleopThread extends RobotThread {
         	zTurn *= 0.4;
         }
         
-        move(xAxis, yAxis, zTurn);
+        move(xAxis, yAxis, zTurn*0.7);
         
         /*
          * Secondary Controller

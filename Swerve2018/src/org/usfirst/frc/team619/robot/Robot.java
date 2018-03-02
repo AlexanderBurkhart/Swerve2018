@@ -174,14 +174,14 @@ public class Robot extends IterativeRobot {
 		//swerveThread = new SwerveThread(0, threadManager, backRight, backLeft, frontRight, frontLeft);
 		
 		System.out.println("testInit");
-		testDrive(backRight, 1);
-		testDrive(backLeft, 1);
-		testDrive(frontRight, 1);
-		testDrive(frontLeft, 1);
-		testRotate(frontLeft);
-		testRotate(frontRight);
-		testRotate(backRight);
-		testRotate(backLeft);
+//		testDrive(backRight, 1);
+//		testDrive(backLeft, 1);
+//		testDrive(frontRight, 1);
+//		testDrive(frontLeft, 1);
+//		testRotate(frontLeft);
+//		testRotate(frontRight);
+//		testRotate(backRight);
+//		testRotate(backLeft);
 //		calibrate(backRight);
 	}
 	

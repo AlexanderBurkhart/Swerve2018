@@ -33,6 +33,7 @@ public class AutoThread extends RobotThread{
 	//1 = rotate
 	//2 = drop
 	boolean[] states = {false, false, false};
+	boolean dropped;
 	
 	public AutoThread(int period, ThreadManager threadManager, WheelDrive backRight, WheelDrive backLeft, WheelDrive frontRight, WheelDrive frontLeft, Lift l, Intake i, LimitSwitch[] aSwitches, AnalogUltrasonic[] anasonics)
 	{
@@ -46,6 +47,8 @@ public class AutoThread extends RobotThread{
 		autoSwitches = aSwitches;
 		ultrasonics = anasonics;
 		
+		dropped = false;
+		
 		lift = l;
 		intake = i;
 		
@@ -54,10 +57,11 @@ public class AutoThread extends RobotThread{
 		driveBase = new SwerveDriveBase(backRight, backLeft, frontRight, frontLeft);
 		
 		gameData =  DriverStation.getInstance().getGameSpecificMessage();
-		side = Character.toString(gameData.charAt(0));
 		
 		//REMOVE WHEN DONE TESTING
-		side = "L";
+		gameData = "RLR";
+		
+		side = Character.toString(gameData.charAt(0));
 		
 		configure();
 		start();
@@ -84,6 +88,24 @@ public class AutoThread extends RobotThread{
 				autoType[i] = true;
 			}
 		}
+ 
+		//set lift down
+		lift.moveLift(1);
+		delay(300);
+		lift.moveLift(-0.5);
+		delay(400);
+		lift.moveLift(0);
+		delay(1000);
+		
+		//move lift in position
+		moveInPosition();
+	}
+	
+	public void moveInPosition()
+	{
+		lift.moveLift(1);
+		delay(1000);
+		lift.moveLift(0);
 	}
 	
 	/**
@@ -93,6 +115,7 @@ public class AutoThread extends RobotThread{
 	{
 		if(side.equals("L")) 
 		{
+			
 			//if in left position
 			if(autoSwitches[0].get() == true)
 			{
@@ -129,41 +152,49 @@ public class AutoThread extends RobotThread{
 		if(sameSide)
 		{
 			//if not close to object keep driving
-			if(!closeToObject())
+			if(!closeToObject() && !dropped)
 			{
-				driveBase.drive(0, -0.5, 0);
+				driveBase.drive(0.25, 0, 0);
 			}
 			//else run intake as long as its the switch
 			else
 			{
 				//checks for edge case
-				delay(500);
+				delay(50);
 				//if still close to object stop and run intake
-				if(closeToObject())
+				if(closeToObject() && !dropped)
 				{
 					driveBase.drive(0, 0, 0);
 					intake.moveIntake(-0.5);
 					delay(500);
 					intake.moveIntake(0);
+					dropped = true;
 				}
 			}
 		}
 		//if not on the same side, drive forward to switch, drive right and drop it into the other side
 		else
 		{
-			//chceks for edge case
-			delay(500);
-			//if still close to object drive sideways and drop cube
-			if(closeToObject())
+			//if not close to object keep driving
+			if(!closeToObject() && !dropped)
 			{
-				//TODO: set up PID with drive to go to encoderPosition
-				driveBase.drive(0.5, 0, 0);
-				delay(5000);
-				driveBase.drive(0, 0, 0);
-				intake.moveIntake(-0.5);
-				delay(500);
-				intake.moveIntake(0);
-				
+				driveBase.drive(0.25, 0, 0);
+			}
+			else
+			{
+				//chceks for edge case
+				delay(50);
+				//if still close to object drive sideways and drop cube
+				if(closeToObject() && !dropped)
+				{
+					//TODO: set up PID with drive to go to encoderPosition
+					driveBase.drive(0, 0.25, 0);
+					delay(3000);
+					driveBase.drive(0, 0, 0);
+					intake.moveIntake(-0.5);
+					delay(500);
+					intake.moveIntake(0);
+				}
 			}
 		}
 		
@@ -179,22 +210,24 @@ public class AutoThread extends RobotThread{
 		if(sameSide)
 		{
 			//if not close to object keep driving
-			if(!closeToObject())
+			if(!closeToObject() && !dropped)
 			{
-				driveBase.drive(0, -0.5, 0);
+				driveBase.drive(0.25, 0, 0);
 			}
 			//else run intake as long as its the switch
 			else
 			{
+				//ultrasonics[0].getDistanceIn();
 				//checks for edge case
-				delay(500);
+				delay(50);
 				//if still close to object stop and run intake
-				if(closeToObject())
+				if(closeToObject() && !dropped)
 				{
 					driveBase.drive(0, 0, 0);
 					intake.moveIntake(-0.5);
 					delay(500);
 					intake.moveIntake(0);
+					dropped = true;
 				}
 			}
 		}
@@ -202,26 +235,26 @@ public class AutoThread extends RobotThread{
 		else
 		{
 			//if not close to object keep driving
-			if(!closeToObject())
+			if(!closeToObject() && !dropped)
 			{
-				driveBase.drive(0, -0.5, 0);
+				driveBase.drive(0.25, 0, 0);
 			}
 			//else prepare to drive sideways
 			else
 			{
 				//chceks for edge case
-				delay(500);
+				delay(50);
 				//if still close to object drive sideways and drop cube
-				if(closeToObject())
+				if(closeToObject() && !dropped)
 				{
 					//TODO: set up PID with drive to go to encoderPosition
-					driveBase.drive(-0.5, 0, 0);
-					delay(5000);
+					driveBase.drive(0, -0.25, 0);
+					delay(3000);
 					driveBase.drive(0, 0, 0);
 					intake.moveIntake(-0.5);
 					delay(500);
 					intake.moveIntake(0);
-					
+					dropped = true;
 				}
 			}
 		}
@@ -233,7 +266,8 @@ public class AutoThread extends RobotThread{
 	 */
 	public boolean closeToObject()
 	{
-		return (ultrasonics[0].getDistanceIn() < 80 && ultrasonics[1].getDistanceIn() < 80);
+		//return (ultrasonics[0].getDistanceIn() < 80 && ultrasonics[1].getDistanceIn() < 80);
+		return (ultrasonics[0].getDistanceIn() < 125);
 	}
 	
 	/**
