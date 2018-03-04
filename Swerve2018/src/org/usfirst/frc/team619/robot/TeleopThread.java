@@ -160,12 +160,12 @@ public class TeleopThread extends RobotThread {
 		 */
 		double xAxis = deadzone(drive.getX(Hand.kRight));
         double yAxis = deadzone(drive.getY(Hand.kRight));
-        double zTurn = deadzone(drive.getX(Hand.kLeft));
+        double zTurn = deadzoneRotate(drive.getX(Hand.kLeft));
         
-//        System.out.println("xAxis: " + xAxis);
-//        System.out.println("yAxis: " + yAxis);
-//        System.out.println("zTurn: " + zTurn);
-//        System.out.println();
+        System.out.println("xAxis: " + xAxis);
+        System.out.println("yAxis: " + yAxis);
+        System.out.println("zTurn: " + zTurn);
+        System.out.println();
         
         System.out.println(imu.getYaw());
         
@@ -179,73 +179,6 @@ public class TeleopThread extends RobotThread {
         }
         else if(drive.getYButton())
         {
-        	double backLeftAng = -23 + -imu.getYaw();
-        	
-        	if(backLeftAng > 180)
-        	{
-        		backLeftAng -= 360;
-        	}
-        	else if(backLeftAng < -180)
-        	{
-        		backLeftAng += 360;
-        	}
-        	
-        	backLeft.setTargetAngle(backLeftAng);
-        	backLeft.goToAngle();
-        	backLeft.setDriveSpeed(1);
-        	backLeft.drive();
-        	
-        	double frontLeftAng = 113 + -imu.getYaw();
-        	
-        	if(frontLeftAng > 180)
-        	{
-        		System.out.println("IMMMMMMMMMFSD L KFD JKHLJDFLK ");
-        		frontLeftAng -= 360;
-        	}
-        	else if(frontLeftAng < -180)
-        	{
-        		System.out.println("IMMMMMMMMMFSD L KFD JKHLJDFLK ");
-        		frontLeftAng += 360;
-        	}
-        	
-        	frontLeft.setTargetAngle(frontLeftAng);
-        	frontLeft.goToAngle();
-        	frontLeft.setDriveSpeed(-1);
-        	frontLeft.drive();
-        	
-        	double frontRightAng = 67 + -imu.getYaw();
-        	
-        	if(frontRightAng > 180)
-        	{
-        		System.out.println("IMMMMMMMMMFSD L KFD JKHLJDFLK ");
-        		frontRightAng -= 360;
-        	}
-        	else if(frontRightAng < -180)
-        	{
-        		System.out.println("IMMMMMMMMMFSD L KFD JKHLJDFLK ");
-        		frontRightAng += 360;
-        	}
-        	
-        	frontRight.setTargetAngle(frontRightAng);
-        	frontRight.goToAngle();
-        	frontRight.setDriveSpeed(1);
-        	frontRight.drive();
-        	
-        	double backRightAngle = 23 + -imu.getYaw();
-        	
-        	if(backRightAngle > 180)
-        	{
-        		backRightAngle -= 360;
-        	}
-        	else if(backRightAngle < -180)
-        	{
-        		backRightAngle += 360;
-        	}
-        	
-        	backRight.setTargetAngle(backRightAngle);
-        	backRight.goToAngle();
-        	backRight.setDriveSpeed(-1);
-        	backRight.drive();
         }
         else if(drive.getBumper(Hand.kRight))
         {
@@ -272,7 +205,7 @@ public class TeleopThread extends RobotThread {
 		}
         else if(secondary.getPOV() == 180)
         {
-        	lift.moveLift(-0.5);
+        	lift.moveLift(-0.25);
         }
         else
         {
@@ -283,12 +216,12 @@ public class TeleopThread extends RobotThread {
         if(secondary.getBButton())
         {
         	//intake
-        	intake.moveIntake(0.5);
+        	intake.moveIntake(1);
         }
         else if(secondary.getYButton())
         {
         	//outake
-        	intake.moveIntake(-0.5);
+        	intake.moveIntake(-1);
         }
         else if(secondary.getXButton())
         {
@@ -302,7 +235,7 @@ public class TeleopThread extends RobotThread {
         }
         else
         {
-        	ramp.stop();
+        	//ramp.stop();
         	intake.stopIntake();
         }
 
@@ -345,6 +278,17 @@ public class TeleopThread extends RobotThread {
 	 */
 	private double deadzone(double val) {
 		if(Math.abs(val) < 0.06)
+			return 0;
+		return val;
+	}
+	
+	/**
+	 * sets val below 0.06 to zero
+	 * @param val - variable input
+	 * @return
+	 */
+	private double deadzoneRotate(double val) {
+		if(Math.abs(val) < 0.25)
 			return 0;
 		return val;
 	}

@@ -29,11 +29,11 @@ public class Intake {
 		System.out.println(intakeSwitch.get());
 		if(intakeSwitch.get() == true)
 		{
-			intakeRight.set(ControlMode.PercentOutput, speed/2);	
+			intakeRight.set(ControlMode.PercentOutput, -speed/2);	
 		}
 		else
 		{
-			intakeRight.set(ControlMode.PercentOutput, -speed);
+			intakeRight.set(ControlMode.PercentOutput, speed);
 		}
 		intakeLeft.set(ControlMode.PercentOutput, speed);
 	}

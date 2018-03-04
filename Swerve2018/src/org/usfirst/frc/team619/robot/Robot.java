@@ -84,21 +84,21 @@ public class Robot extends IterativeRobot {
 		}
 		
 		ultrasonics[0] = new AnalogUltrasonic(0);
-		ultrasonics[1] = new AnalogUltrasonic(1);
+		ultrasonics[1] = new AnalogUltrasonic(2);
 		
-		rampRelease = new TalonSRX(9);
-		
-		currentLimit(rampRelease, 35, 40);
-		
-		ramp = new Ramp(rampRelease);
-		
+//		rampRelease = new TalonSRX(9);
+//		
+//		currentLimit(rampRelease, 35, 40);
+//		
+//		ramp = new Ramp(rampRelease);
+//		
 		lift1 = new TalonSRX(11);
 		lift2 = new TalonSRX(12);
 		lift3 = new TalonSRX(13);
 			
-		currentLimit(lift1, 35, 40);
-		currentLimit(lift2, 35, 40);
-		currentLimit(lift3, 35, 40);
+		currentLimit(lift1, 20, 25);
+		currentLimit(lift2, 20, 25);
+		currentLimit(lift3, 20, 25);
 		
 		lift = new Lift(lift1, lift2, lift3);
 		

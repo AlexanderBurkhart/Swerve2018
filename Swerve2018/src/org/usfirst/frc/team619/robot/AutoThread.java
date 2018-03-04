@@ -28,6 +28,7 @@ public class AutoThread extends RobotThread{
 	
 	//alternative to drive encoder atm
 	int count = 0;
+	double startingTime, currentTime;
 	
 	//0 = drive
 	//1 = rotate
@@ -46,6 +47,8 @@ public class AutoThread extends RobotThread{
 		
 		autoSwitches = aSwitches;
 		ultrasonics = anasonics;
+		
+		startingTime = System.currentTimeMillis();
 		
 		dropped = false;
 		
@@ -117,7 +120,7 @@ public class AutoThread extends RobotThread{
 		{
 			
 			//if in left position
-			if(autoSwitches[0].get() == true)
+			if(autoSwitches[0].get() == true || autoSwitches[3].get() == true)
 			{
 				leftAuto(true);
 			}
@@ -125,6 +128,10 @@ public class AutoThread extends RobotThread{
 			else if(autoSwitches[1].get() == true)
 			{
 				rightAuto(false);
+			}
+			else
+			{
+				moveForward();
 			}
 		}
 		else if(side.equals("R"))
@@ -135,9 +142,13 @@ public class AutoThread extends RobotThread{
 				leftAuto(false);
 			}
 			//if in right position
-			else if(autoSwitches[1].get() == true)
+			else if(autoSwitches[1].get() == true  || autoSwitches[4].get() == true)
 			{
 				rightAuto(true);
+			}
+			else
+			{
+				moveForward();
 			}
 		}
 	}
@@ -258,7 +269,19 @@ public class AutoThread extends RobotThread{
 				}
 			}
 		}
-		
+	}
+	
+	public void moveForward()
+	{
+		currentTime = System.currentTimeMillis() - startingTime;
+		if(currentTime < 3000)
+		{
+			driveBase.drive(0.25, 0, 0);
+		}
+		else
+		{
+			driveBase.drive(0, 0, 0);
+		}
 	}
 	
 	/*
