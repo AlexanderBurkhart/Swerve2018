@@ -9,9 +9,11 @@ package org.usfirst.frc.team619.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -36,16 +38,16 @@ public class Robot extends IterativeRobot {
 	
 	//talons
 	//drive id: 4  turn id: 9
-	private WheelDrive backRight = new WheelDrive(4, 5);
+	private WheelDrive backRight = new WheelDrive(4, 5, 225);
 	
 	//drive id: 7  turn id: 8
-	private WheelDrive backLeft = new WheelDrive(0, 1);
+	private WheelDrive backLeft = new WheelDrive(0, 1, 135);
 	
 	//drive id: 6  turn id: 1
-	private WheelDrive frontRight = new WheelDrive(6, 7);
+	private WheelDrive frontRight = new WheelDrive(6, 7, 315);
 	
 	//drive id: 10  turn id: 3
-	private WheelDrive frontLeft = new WheelDrive(2, 3);
+	private WheelDrive frontLeft = new WheelDrive(2, 3, 45);
 	
 	WheelDrive[] wheels = {backRight, backLeft, frontRight, frontLeft};
 	
@@ -63,6 +65,8 @@ public class Robot extends IterativeRobot {
 	
 	//auto switches
 	LimitSwitch[] autoSwitches = new LimitSwitch[4];
+	
+	AHRS imu;
 	
 	AnalogUltrasonic[] ultrasonics = new AnalogUltrasonic[2];
 	
@@ -85,6 +89,8 @@ public class Robot extends IterativeRobot {
 		
 		ultrasonics[0] = new AnalogUltrasonic(0);
 		ultrasonics[1] = new AnalogUltrasonic(2);
+		
+		imu = new AHRS(SPI.Port.kMXP);
 		
 //		rampRelease = new TalonSRX(9);
 //		
@@ -155,6 +161,8 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
+//		System.out.println("gyro: " + -imu.getYaw());
+//		System.out.println("target angle: " + frontLeft.getTargetAngle());
 		//swerveDrive.drive(joystick.getRawAxis(1), joystick.getRawAxis(0), joystick.getRawAxis(4));
 		//System.out.println("CURRENT ANGLE: " + frontRight.getCurrentAngle());
 		//System.out.println("COMMAND POSITION: " + frontRight.getTargetAngle());
@@ -173,6 +181,8 @@ public class Robot extends IterativeRobot {
 		threadManager.killAllThreads();
 		//swerveThread = new SwerveThread(0, threadManager, backRight, backLeft, frontRight, frontLeft);
 		
+		rotate(0);
+		
 		System.out.println("testInit");
 //		testDrive(backRight, 1);
 //		testDrive(backLeft, 1);
@@ -190,8 +200,9 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void testPeriodic() {
-		System.out.println("ultra0: " + ultrasonics[0].getDistanceIn());
-		System.out.println("ultra1: " + ultrasonics[1].getDistanceIn());
+//		System.out.println("ultra0: " + ultrasonics[0].getDistanceIn());
+//		System.out.println("ultra1: " + ultrasonics[1].getDistanceIn());
+		System.out.println(frontRight.getCurrentAngle());
 		//System.out.println(backRight.getCurrentAngle() + " == " + backRight.getTargetAngle());
 	}
 	
@@ -216,6 +227,37 @@ public class Robot extends IterativeRobot {
 		wheel.stop();
     }
 	
+    public void rotate(int i)
+    {
+    	if(i == 0)
+    	{
+    		frontLeft.setTargetAngle(45);
+    		frontLeft.setDriveSpeed(0.2);
+    		frontLeft.goToAngle();
+    		frontLeft.drive();
+    		
+    		frontRight.setTargetAngle(315);
+    		frontRight.setDriveSpeed(0.2);
+    		frontRight.goToAngle();
+    		frontRight.drive();
+    		
+    		backLeft.setTargetAngle(135);
+    		backLeft.setDriveSpeed(0.2);
+    		backLeft.goToAngle();
+    		backLeft.drive();
+    		
+    		backRight.setTargetAngle(225);
+    		backRight.setDriveSpeed(0.2);
+    		backRight.goToAngle();
+    		backRight.drive();
+    		
+    	}
+    	else
+    	{
+    		
+    	}
+    }
+    
     public void testRotate(WheelDrive wheel)
     {
 //    	System.out.println("wheel current angle: " + wheel.getCurrentAngle());
@@ -228,6 +270,7 @@ public class Robot extends IterativeRobot {
     	wheel.setTargetAngle(90);
     	wheel.goToAngle();
     	System.out.println("goto: " + wheel.getTargetAngle());
+    	wheel.angleMotor.setSelectedSensorPosition(0, 0, 0);
     	delay(3000);
     }
     

@@ -162,12 +162,12 @@ public class TeleopThread extends RobotThread {
         double yAxis = deadzone(drive.getY(Hand.kRight));
         double zTurn = deadzoneRotate(drive.getX(Hand.kLeft));
         
-        System.out.println("xAxis: " + xAxis);
-        System.out.println("yAxis: " + yAxis);
-        System.out.println("zTurn: " + zTurn);
-        System.out.println();
+//        System.out.println("xAxis: " + xAxis);
+//        System.out.println("yAxis: " + yAxis);
+//        System.out.println("zTurn: " + zTurn);
+//        System.out.println();
         
-        System.out.println(imu.getYaw());
+//        System.out.println(imu.getYaw());
         
         if(drive.getAButton())
 		{
@@ -205,7 +205,7 @@ public class TeleopThread extends RobotThread {
 		}
         else if(secondary.getPOV() == 180)
         {
-        	lift.moveLift(-0.25);
+        	lift.moveLift(-0.5);
         }
         else
         {
@@ -251,10 +251,10 @@ public class TeleopThread extends RobotThread {
 	public void move(double x1, double y1, double x2)
 	{
 		if(isRobotCentric){
-        	driveBase.drive(-y1, x1, -x2);
+        	driveBase.drive(x1, -y1, x2);
         } else if(isFieldCentric){
         	//System.out.println("isFieldCentric");
-            driveBase.getFieldCentric(-x1, -y1, -x2);
+            driveBase.getFieldCentric(x1, -y1, x2);
         }
 	}
 	

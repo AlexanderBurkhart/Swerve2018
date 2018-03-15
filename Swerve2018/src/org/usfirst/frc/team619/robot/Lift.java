@@ -22,7 +22,7 @@ public class Lift {
 	 */
 	public void moveLift(double speed)
 	{
-		lift1.set(ControlMode.PercentOutput, -speed);
+		lift1.set(ControlMode.PercentOutput, speed);
 		lift2.set(ControlMode.PercentOutput, speed);
 		lift3.set(ControlMode.PercentOutput, speed);
 	}

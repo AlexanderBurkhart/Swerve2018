@@ -35,7 +35,7 @@ public class AutoThread extends RobotThread{
 	//2 = drop
 	boolean[] states = {false, false, false};
 	boolean dropped;
-	
+	int targetAngle;
 	public AutoThread(int period, ThreadManager threadManager, WheelDrive backRight, WheelDrive backLeft, WheelDrive frontRight, WheelDrive frontLeft, Lift l, Intake i, LimitSwitch[] aSwitches, AnalogUltrasonic[] anasonics)
 	{
 		super(period, threadManager);
@@ -304,5 +304,17 @@ public class AutoThread extends RobotThread{
     		Thread.currentThread().interrupt();
     	}
     }
-	
+    
+    public void turnToAngle(int targetAngle) 
+    {
+    	double theta = imu.getYaw( );
+    	if(targetAngle-theta < 2) 
+    	{
+    		
+    	}
+    	else if(targetAngle-theta < -2)
+    	{
+    		
+    	}
+    }
 }
