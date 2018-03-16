@@ -27,15 +27,22 @@ public class Intake {
 		//+ for intakeleft is in
 		
 		System.out.println(intakeSwitch.get());
-		if(intakeSwitch.get() == true)
+		if(intakeRight.getOutputCurrent() > 100)
 		{
-			intakeRight.set(ControlMode.PercentOutput, -speed/2);	
+			intakeLeft.set(ControlMode.PercentOutput, -speed/2);
+			intakeRight.set(ControlMode.PercentOutput, speed);
+		}
+		else if(intakeLeft.getOutputCurrent() > 100)
+		{
+			intakeRight.set(ControlMode.PercentOutput, -speed/2);
+			intakeLeft.set(ControlMode.PercentOutput, speed);
 		}
 		else
 		{
 			intakeRight.set(ControlMode.PercentOutput, speed);
+			intakeLeft.set(ControlMode.PercentOutput, speed);
 		}
-		intakeLeft.set(ControlMode.PercentOutput, speed);
+		
 	}
 	
 	/**

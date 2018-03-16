@@ -32,7 +32,7 @@ public class WheelDrive {
 		this.angleMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute, 0, 10);
 		
 		//NEVER UNCOMMENT THIS LINE UNLESS YOU WANT TO RESET ENCODER POSITION WHERE IT IS WHEN ROBOT TURNS ON
-		//this.angleMotor.setSelectedSensorPosition(0, 0, 0);
+		this.angleMotor.setSelectedSensorPosition(0, 0, 0);
 		
 		this.angleMotor.configNominalOutputForward(0, 10);
 		this.angleMotor.configNominalOutputReverse(0, 10);

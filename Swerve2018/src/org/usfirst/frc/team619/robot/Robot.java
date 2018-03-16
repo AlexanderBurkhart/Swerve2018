@@ -111,8 +111,8 @@ public class Robot extends IterativeRobot {
 		intakeLeft = new TalonSRX(10);
 		intakeRight = new TalonSRX(14);
 		
-		currentLimit(intakeLeft, 25, 30);
-		currentLimit(intakeRight, 25, 30);
+//		currentLimit(intakeLeft, 25, 30);
+//		currentLimit(intakeRight, 25, 30);
 		
 		intake = new Intake(intakeLeft, intakeRight, intakeSwitch);
 		
