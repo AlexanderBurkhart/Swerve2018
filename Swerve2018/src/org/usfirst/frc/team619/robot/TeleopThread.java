@@ -77,6 +77,9 @@ public class TeleopThread extends RobotThread {
 	double speed;
 	
 	SwerveDriveBase driveBase;
+	int scalePercent;
+	
+	boolean alreadyPressed;
 	
 	//Manipulators
 	Lift lift;
@@ -123,10 +126,14 @@ public class TeleopThread extends RobotThread {
 		
 		imu = new AHRS(SPI.Port.kMXP);
 		
+		alreadyPressed = false;
+		
 		targetHeading = imu.getAngle();
 		
 		isRobotCentric = true;
 		isFieldCentric = false;
+		
+		scalePercent = 10;
 		
 		driveBase = new SwerveDriveBase(backRight, backLeft, frontRight, frontLeft);
 		
@@ -179,6 +186,7 @@ public class TeleopThread extends RobotThread {
         }
         else if(drive.getYButton())
         {
+        	imu.zeroYaw();
         }
         else if(drive.getBumper(Hand.kRight))
         {
@@ -186,8 +194,29 @@ public class TeleopThread extends RobotThread {
         	yAxis *= 0.2;
         	zTurn *= 0.4;
         }
+        else if(drive.getPOV() == 0)
+        {
+        	if(!(scalePercent == 10) && !alreadyPressed)
+        	{
+        		scalePercent += 1;
+        		alreadyPressed = true;
+        	}
+        }
+        else if(drive.getPOV() == 180)
+        {
+        	if(!(scalePercent == 1) && !alreadyPressed)
+        	{
+        		scalePercent -= 1;
+        		alreadyPressed = true;
+        	}
+        }
+        else
+        {
+        	alreadyPressed = false;
+        }
+        System.out.println("scalePercent: " + scalePercent);
         
-        move(xAxis, yAxis, zTurn*0.7);
+        move(xAxis * scalePercent*0.1, yAxis * scalePercent*0.1, zTurn*0.7*scalePercent*0.1);
         
         /*
          * Secondary Controller
@@ -238,8 +267,6 @@ public class TeleopThread extends RobotThread {
         	//ramp.stop();
         	intake.stopIntake();
         }
-
-        delay(50);
 	}
 	
 	/**

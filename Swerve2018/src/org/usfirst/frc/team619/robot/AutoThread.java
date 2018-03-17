@@ -30,12 +30,28 @@ public class AutoThread extends RobotThread{
 	int count = 0;
 	double startingTime, currentTime;
 	
+	boolean turn;
+	
 	//0 = drive
 	//1 = rotate
 	//2 = drop
 	boolean[] states = {false, false, false};
 	boolean dropped;
+	
+	double startTime;
+	double targetTime;
+	boolean moving;
+	boolean intaking;
 	int targetAngle;
+	
+	//drive vars
+	double x1;
+	double y1;
+	double x2;
+	double s1;
+	
+	double turnVal;
+	
 	public AutoThread(int period, ThreadManager threadManager, WheelDrive backRight, WheelDrive backLeft, WheelDrive frontRight, WheelDrive frontLeft, Lift l, Intake i, LimitSwitch[] aSwitches, AnalogUltrasonic[] anasonics)
 	{
 		super(period, threadManager);
@@ -54,6 +70,7 @@ public class AutoThread extends RobotThread{
 		
 		lift = l;
 		intake = i;
+		s1 = 0;
 		
 		imu = new AHRS(SPI.Port.kMXP);
 		
@@ -62,14 +79,114 @@ public class AutoThread extends RobotThread{
 		gameData =  DriverStation.getInstance().getGameSpecificMessage();
 		
 		//REMOVE WHEN DONE TESTING
-		//gameData = "RLR";
+		gameData = "RLR";
 		
 		side = Character.toString(gameData.charAt(0));
 		
 		configure();
+		
+		startAuto();
 		start();
 	}
 	
+	
+	public void startAuto()
+	{
+		turnTo(90);
+		move(0, 0.3, 1000);
+	}
+	
+	public void turnTo(int angle)
+	{
+		targetAngle = angle;
+		turn = true;
+	}
+	
+	public int getTargetAngle()
+	{
+		return targetAngle;
+	}
+	
+	public void cycle()
+	{
+		System.out.println(imu.getAngle() + " = " + getTargetAngle() + " is " + !atAngle() + " turn = " + turn);
+		if(turn)
+		{
+			if(!atAngle())
+			{
+				turnVal = side.equals("R") ? -0.3 : 0.3;
+				//System.out.println("turn bb : " + turnVal);
+			}
+			else
+			{
+				//System.out.println("stop bb");
+				turnVal = 0;
+				turn = false;
+			}
+		}
+		
+		if(moving)
+		{
+			double currentTime = System.currentTimeMillis();
+			
+			double time = currentTime - startTime;
+			
+			if(time >= targetTime)
+			{
+				x1 = 0;
+				y1 = 0;
+				time = 0;
+				moving = false;
+			}
+		}
+		
+		if(intaking)
+		{
+			double currentTime = System.currentTimeMillis();
+			
+			double time = currentTime - startTime;
+			
+			if(time >= targetTime)
+			{
+				s1 = 0;
+				time = 0;
+				intaking = false;
+			}
+		}
+		
+		intake.moveIntake(s1);
+		driveBase.getFieldCentric(x1, y1, turnVal);
+	}
+	
+	public void move(double x, double y, int time)
+	{
+		moving = true;
+		
+		x1 = x;
+		y1 = y;
+		
+		startTime = System.currentTimeMillis();
+		targetTime = time;
+	}
+	
+	public void intake(double s, int time)
+	{
+		intaking = true;
+		
+		s1 = s;
+		
+		startTime = System.currentTimeMillis();
+		targetTime = time;
+	}
+	
+	public boolean atAngle()
+	{
+		if(imu.getAngle() > getTargetAngle()-10 && imu.getAngle() < getTargetAngle()+10)
+		{
+			return true;
+		}
+		return false;
+	}
 	
 	/**
 	 * autoType config
@@ -91,7 +208,22 @@ public class AutoThread extends RobotThread{
 				autoType[i] = true;
 			}
 		}
- 
+		
+		turnVal = 0;
+		
+		liftSetup();
+	}
+	
+	
+	
+	public void liftSetup()
+	{
+		liftDown();
+		moveInPosition();
+	}
+	
+	public void liftDown()
+	{
 		//set lift down
 		lift.moveLift(1);
 		delay(300);
@@ -99,9 +231,6 @@ public class AutoThread extends RobotThread{
 		delay(400);
 		lift.moveLift(0);
 		delay(1000);
-		
-		//move lift in position
-		moveInPosition();
 	}
 	
 	public void moveInPosition()
@@ -109,188 +238,6 @@ public class AutoThread extends RobotThread{
 		lift.moveLift(1);
 		delay(1000);
 		lift.moveLift(0);
-	}
-	
-	/**
-	 * refreshes updates continuously
-	 */
-	protected void cycle() 
-	{
-		if(side.equals("L")) 
-		{
-			
-			//if in left position
-			if(autoSwitches[0].get() == true || autoSwitches[3].get() == true)
-			{
-				leftAuto(true);
-			}
-			//if in right position
-			else if(autoSwitches[1].get() == true)
-			{
-				rightAuto(false);
-			}
-			else
-			{
-				moveForward();
-			}
-		}
-		else if(side.equals("R"))
-		{
-			//if in left position
-			if(autoSwitches[0].get() == true)
-			{
-				leftAuto(false);
-			}
-			//if in right position
-			else if(autoSwitches[1].get() == true  || autoSwitches[4].get() == true)
-			{
-				rightAuto(true);
-			}
-			else
-			{
-				moveForward();
-			}
-		}
-	}
-	
-	/**
-	 * auto algorithm when in the left position
-	 * @param sameSide - if in the same position as your own aliance's switch
-	 */
-	public void leftAuto(boolean sameSide)
-	{
-		//if on sameSide, drive forward to switch and drop cube
-		if(sameSide)
-		{
-			//if not close to object keep driving
-			if(!closeToObject() && !dropped)
-			{
-				driveBase.drive(0.25, 0, 0);
-			}
-			//else run intake as long as its the switch
-			else
-			{
-				//checks for edge case
-				delay(50);
-				//if still close to object stop and run intake
-				if(closeToObject() && !dropped)
-				{
-					driveBase.drive(0, 0, 0);
-					intake.moveIntake(-0.5);
-					delay(500);
-					intake.moveIntake(0);
-					dropped = true;
-				}
-			}
-		}
-		//if not on the same side, drive forward to switch, drive right and drop it into the other side
-		else
-		{
-			//if not close to object keep driving
-			if(!closeToObject() && !dropped)
-			{
-				driveBase.drive(0.25, 0, 0);
-			}
-			else
-			{
-				//chceks for edge case
-				delay(50);
-				//if still close to object drive sideways and drop cube
-				if(closeToObject() && !dropped)
-				{
-					//TODO: set up PID with drive to go to encoderPosition
-					driveBase.drive(0, 0.25, 0);
-					delay(3000);
-					driveBase.drive(0, 0, 0);
-					intake.moveIntake(-0.5);
-					delay(500);
-					intake.moveIntake(0);
-				}
-			}
-		}
-		
-	}
-	
-	/**
-	 * auto algorithm when in the right position
-	 * @param sameSide - if in the same position as your own aliance's switch
-	 */
-	public void rightAuto(boolean sameSide)
-	{
-		//if on sameSide, drive forward to switch and drop cube
-		if(sameSide)
-		{
-			//if not close to object keep driving
-			if(!closeToObject() && !dropped)
-			{
-				driveBase.drive(0.25, 0, 0);
-			}
-			//else run intake as long as its the switch
-			else
-			{
-				//ultrasonics[0].getDistanceIn();
-				//checks for edge case
-				delay(50);
-				//if still close to object stop and run intake
-				if(closeToObject() && !dropped)
-				{
-					driveBase.drive(0, 0, 0);
-					intake.moveIntake(-0.5);
-					delay(500);
-					intake.moveIntake(0);
-					dropped = true;
-				}
-			}
-		}
-		//if not on the same side, drive forward to switch, drive left and drop it into the other side
-		else
-		{
-			//if not close to object keep driving
-			if(!closeToObject() && !dropped)
-			{
-				driveBase.drive(0.25, 0, 0);
-			}
-			//else prepare to drive sideways
-			else
-			{
-				//chceks for edge case
-				delay(50);
-				//if still close to object drive sideways and drop cube
-				if(closeToObject() && !dropped)
-				{
-					//TODO: set up PID with drive to go to encoderPosition
-					driveBase.drive(0, -0.25, 0);
-					delay(3000);
-					driveBase.drive(0, 0, 0);
-					intake.moveIntake(-0.5);
-					delay(500);
-					intake.moveIntake(0);
-					dropped = true;
-				}
-			}
-		}
-	}
-	
-	public void moveForward()
-	{
-		currentTime = System.currentTimeMillis() - startingTime;
-		if(currentTime < 3000)
-		{
-			driveBase.drive(0.25, 0, 0);
-		}
-		else
-		{
-			driveBase.drive(0, 0, 0);
-		}
-	}
-	
-	/*
-	 * return true if both ultrasonics sees a close object
-	 */
-	public boolean closeToObject()
-	{
-		//return (ultrasonics[0].getDistanceIn() < 80 && ultrasonics[1].getDistanceIn() < 80);
-		return (ultrasonics[0].getDistanceIn() < 125);
 	}
 	
 	/**
@@ -302,19 +249,6 @@ public class AutoThread extends RobotThread{
     		Thread.sleep(milliseconds);
     	} catch(InterruptedException e) {
     		Thread.currentThread().interrupt();
-    	}
-    }
-    
-    public void turnToAngle(int targetAngle) 
-    {
-    	double theta = imu.getYaw( );
-    	if(targetAngle-theta < 2) 
-    	{
-    		
-    	}
-    	else if(targetAngle-theta < -2)
-    	{
-    		
     	}
     }
 }

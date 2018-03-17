@@ -72,8 +72,7 @@ public class SwerveDriveBase {
 	 */
 	public void drive(double x1, double y1, double x2) 
 	{
-		double r = Math.sqrt((L * L) + (W * W));
-		
+	
 		double multi = Math.sqrt(2)/2;
 		
 		double[] fr = new double[] {x1 + multi*x2, y1 + -multi*x2, 0};
