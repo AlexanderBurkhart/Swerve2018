@@ -3,6 +3,8 @@ package org.usfirst.frc.team619.robot;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
+import edu.wpi.first.wpilibj.GenericHID.Hand;
+
 public class Intake {
 	
 	TalonSRX intakeRight;
@@ -36,6 +38,18 @@ public class Intake {
 			intakeRight.set(ControlMode.PercentOutput, speed);
 		}
 		intakeLeft.set(ControlMode.PercentOutput, speed);
+	}
+	
+	public void moveIntake(Hand hand, double speed)
+	{
+		if(hand.equals(Hand.kRight))
+		{
+			intakeRight.set(ControlMode.PercentOutput, speed);
+		}
+		if(hand.equals(Hand.kLeft))
+		{
+			intakeLeft.set(ControlMode.PercentOutput, speed);
+		}
 	}
 	
 	/**

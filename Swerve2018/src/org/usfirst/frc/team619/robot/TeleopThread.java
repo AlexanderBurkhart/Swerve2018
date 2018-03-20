@@ -182,9 +182,9 @@ public class TeleopThread extends RobotThread {
         }
         else if(drive.getBumper(Hand.kRight))
         {
-        	xAxis *= 0.2;
-        	yAxis *= 0.2;
-        	zTurn *= 0.4;
+        	xAxis *= 0.3;
+        	yAxis *= 0.3;
+        	zTurn *= 0.5;
         }
         
         move(xAxis, yAxis, zTurn*0.7);
@@ -222,6 +222,22 @@ public class TeleopThread extends RobotThread {
         {
         	//outake
         	intake.moveIntake(-1);
+        }
+        else if(secondary.getBumper(Hand.kRight))
+        {
+        	intake.intakeRight.set(ControlMode.PercentOutput, 1);
+        }
+        else if(secondary.getBumper(Hand.kLeft))
+        {
+        	intake.intakeLeft.set(ControlMode.PercentOutput, 1);
+        }
+        else if(secondary.getTriggerAxis(Hand.kRight) > 0)
+        {
+        	intake.intakeRight.set(ControlMode.PercentOutput, -1);
+        }
+        else if(secondary.getTriggerAxis(Hand.kLeft) > 0)
+        {
+        	intake.intakeLeft.set(ControlMode.PercentOutput, -1);
         }
         else if(secondary.getXButton())
         {
