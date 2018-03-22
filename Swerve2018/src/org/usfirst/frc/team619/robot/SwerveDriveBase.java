@@ -1,6 +1,7 @@
 package org.usfirst.frc.team619.robot;
 
 import static java.lang.Math.PI;
+import static java.lang.Math.abs;
 import static java.lang.Math.atan2;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -10,13 +11,14 @@ import static java.lang.Math.toRadians;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SwerveDriveBase {
 	
 	boolean notMoving;
 	
-	public final double L = 6.35;
-	public final double W = 9.525;
+	public final double L = 16.129;
+	public final double W = 24.194;
 	
 	private WheelDrive backRight;
 	private WheelDrive backLeft;
@@ -70,70 +72,51 @@ public class SwerveDriveBase {
 	 */
 	public void drive(double x1, double y1, double x2) 
 	{
-		notMoving = x1 == 0 && y1 == 0 && x2 == 0;
-		
-		if(!notMoving)
-		{
-			double r = Math.sqrt((L * L) + (W * W));
-			
-			double a = x1 - x2 * (L/r);
-			double b = x1 + x2 * (L/r);
-			double c = y1 - x2 * (W/r);
-			double d = y1 + x2 * (W/r);	
-			
-	        double[] angles = new double[]{ atan2(b,c)*180/PI,
-                    atan2(b,d)*180/PI,
-                    atan2(a,d)*180/PI,
-                    atan2(a,c)*180/PI };
- 
-	        double[] speeds = new double[]{ sqrt(b*b+c*c),
-                    sqrt(b*b+d*d),
-                    sqrt(a*a+d*d),
-                    sqrt(a*a+c*c) };
-		
-	        double max = speeds[0];
-	        if ( speeds[1] > max ) max = speeds[1];
-	        if ( speeds[2] > max ) max = speeds[2];
-	        if ( speeds[3] > max ) max = speeds[3];
-	        
-	        if ( max > 1 ) {
-	            speeds[0] = max; //was dividing
-	            speeds[1] = max;
-	            speeds[2] = max;
-	            speeds[3] = max;
-	        }
-			
-	        //drive speed
-	        wheelArray[0].setDriveSpeed(speeds[0]);
-			wheelArray[2].setDriveSpeed(speeds[2]);
-			if(Math.abs(x2) > 0)
-			{
-				wheelArray[1].setDriveSpeed(-speeds[1]);
-				wheelArray[3].setDriveSpeed(-speeds[3]);
-			}
-			else
-			{
-				wheelArray[1].setDriveSpeed(speeds[1]);
-				wheelArray[3].setDriveSpeed(speeds[3]);
-			}
-	        
-			for( int i=0; i < wheelArray.length; i++ ) {	
-	            wheelArray[i].setTargetAngle(angles[i]);
-	        }
 	
-	        for(int i = 0; i < wheelArray.length; i++)
-	        {
-	        	wheelArray[i].goToAngle();
-	            wheelArray[i].drive();
-	        }
-		}
-		else
-		{
-			for(int i = 0; i < wheelArray.length; i++)
-	        {
-	        	wheelArray[i].stop();
-	        }
-		} 	
+		double multi = Math.sqrt(2)/2;
+		
+		double[] fr = new double[] {x1 + multi*x2, y1 + -multi*x2, 0};
+		fr[2] = Math.sqrt(Math.pow(fr[0], 2) + Math.pow(fr[1], 2));
+		
+		double[] fl = new double[] {x1 + multi*x2, y1 + multi*x2, 0};
+		fl[2] = Math.sqrt(Math.pow(fl[0], 2) + Math.pow(fl[1], 2));
+		
+		double[] bl = new double[] {x1 + -multi*x2, y1 + multi*x2, 0};
+		bl[2] = Math.sqrt(Math.pow(bl[0], 2) + Math.pow(bl[1], 2));
+		
+		double[] br = new double[] {x1 + -multi*x2, y1 + -multi*x2, 0};
+		br[2] = Math.sqrt(Math.pow(br[0], 2) + Math.pow(br[1], 2));
+		
+		double[][] valWheel = new double[][]{fr, fl, bl, br};
+		
+		double[] angles = new double[] {atan2(valWheel[0][1], valWheel[0][0])*180/PI,
+				atan2(valWheel[1][1], valWheel[1][0])*180/PI,
+				atan2(valWheel[2][1], valWheel[2][0])*180/PI,
+				atan2(valWheel[3][1], valWheel[3][0])*180/PI
+		};
+		
+		double[] speeds = new double[]{valWheel[0][2],
+				valWheel[1][2],
+				valWheel[2][2],
+				valWheel[3][2]
+		};
+		
+		if( abs(y1) < 0.05 && abs(x1) < 0.05 && abs(x2) < 0.05){
+			for(WheelDrive wheel : wheelArray) {
+				 wheel.setDriveSpeed(0);
+			 }
+       } else {
+           //Set target angle
+           for( int i=0; i < wheelArray.length; ++i ) {
+               wheelArray[i].setTargetAngle(angles[i]);
+               wheelArray[i].setDriveSpeed(speeds[i]);
+           }
+       }
+	
+	  for(WheelDrive wheel : wheelArray)
+          wheel.goToAngle();
+      for(WheelDrive wheel : wheelArray)
+          wheel.drive();		
 	} 
 	
 	/**
@@ -169,12 +152,12 @@ public class SwerveDriveBase {
 
         //  imu.getYaw( ) returns angle between -180 and 180
         double theta = imu.getYaw( );
-        System.out.println("theta: " + theta);
+        //System.out.println("theta: " + theta);
         //System.out.println("Theta: " + theta);
         while ( theta < 0 ) theta += 360; //COMMENT THIS OUT AGAIN IF IT SCREWS UP
         if(x2 != 0)
         	targetHeading = theta;
-        theta = -toRadians(theta); //CHANGE THIS TO NEGATIVE IF IT SCEWS UP
+        theta = toRadians(theta); //CHANGE THIS TO NEGATIVE IF IT SCEWS UP
         double temp = y1*cos(theta) + x1*sin(theta);
         x1 = -y1*sin(theta) + x1*cos(theta);
         y1 = temp;

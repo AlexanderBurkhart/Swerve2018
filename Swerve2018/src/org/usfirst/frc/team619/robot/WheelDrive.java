@@ -13,16 +13,18 @@ public class WheelDrive {
 	
 	private final double MAX_VOLTS = 4.95;
 	
-	private TalonSRX angleMotor;
-	private TalonSRX speedMotor;
+	public TalonSRX angleMotor;
+	public TalonSRX speedMotor;
 	private PIDController pidController;
 	public static final double p=0.3, i=0.0001, d=139;
 	private double encoderUnitsPerRotation = 22235.4285714; //76/14 ratio 4096(encoder ticks per spin)
 	private double targetAngle = 0;
 	private double driveSpeed = 0;
 	
+	public int rotAngle;
+	
 	boolean stopRotating = false;
-	public WheelDrive(int angleMotor, int speedMotor)
+	public WheelDrive(int angleMotor, int speedMotor, int rangle)
 	{
 		this.angleMotor = new TalonSRX(angleMotor);
 		this.speedMotor = new TalonSRX(speedMotor);
@@ -40,13 +42,15 @@ public class WheelDrive {
 		this.angleMotor.setInverted(false);
 		this.angleMotor.setSensorPhase(true);
 		
+		rotAngle = rangle;
+		
 		//this.angleMotor.configAllowableClosedloopError(0, 0, 10);
 		
-		this.angleMotor.config_kP(0, 0.6, 10);
-		this.angleMotor.config_kI(0, 0.001, 10);
+		this.angleMotor.config_kP(0, 0.5, 10);
+		this.angleMotor.config_kI(0, 0, 10);
 		this.angleMotor.config_kD(0, 10, 10);
 
-		currentLimit(this.angleMotor, 25, 30);
+		currentLimit(this.angleMotor, 10, 15);
 		currentLimit(this.speedMotor, 35, 40);
 	}
 	
@@ -58,6 +62,11 @@ public class WheelDrive {
 	
 	public void setDriveSpeed(double speed) {
 		driveSpeed = speed;
+	}
+	
+	public void rotate()
+	{
+		setTargetAngle(rotAngle);
 	}
 	
 	public double getDriveSpeed()
@@ -145,7 +154,7 @@ public class WheelDrive {
 		}else if(angle >=360){
 			angle -= 360;
 		}
-		targetAngle = (int)angle ;
+		targetAngle = (int)angle;
 	}
 
 	//get talons

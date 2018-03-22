@@ -77,6 +77,9 @@ public class TeleopThread extends RobotThread {
 	double speed;
 	
 	SwerveDriveBase driveBase;
+	int scalePercent;
+	
+	boolean alreadyPressed;
 	
 	//Manipulators
 	Lift lift;
@@ -123,10 +126,14 @@ public class TeleopThread extends RobotThread {
 		
 		imu = new AHRS(SPI.Port.kMXP);
 		
+		alreadyPressed = false;
+		
 		targetHeading = imu.getAngle();
 		
 		isRobotCentric = true;
 		isFieldCentric = false;
+		
+		scalePercent = 10;
 		
 		driveBase = new SwerveDriveBase(backRight, backLeft, frontRight, frontLeft);
 		
@@ -162,12 +169,12 @@ public class TeleopThread extends RobotThread {
         double yAxis = deadzone(drive.getY(Hand.kRight));
         double zTurn = deadzoneRotate(drive.getX(Hand.kLeft));
         
-        System.out.println("xAxis: " + xAxis);
-        System.out.println("yAxis: " + yAxis);
-        System.out.println("zTurn: " + zTurn);
-        System.out.println();
+//        System.out.println("xAxis: " + xAxis);
+//        System.out.println("yAxis: " + yAxis);
+//        System.out.println("zTurn: " + zTurn);
+//        System.out.println();
         
-        System.out.println(imu.getYaw());
+//        System.out.println(imu.getYaw());
         
         if(drive.getAButton())
 		{
@@ -179,6 +186,7 @@ public class TeleopThread extends RobotThread {
         }
         else if(drive.getYButton())
         {
+        	imu.zeroYaw();
         }
         else if(drive.getBumper(Hand.kRight))
         {
@@ -186,8 +194,29 @@ public class TeleopThread extends RobotThread {
         	yAxis *= 0.3;
         	zTurn *= 0.5;
         }
+        else if(drive.getPOV() == 0)
+        {
+        	if(!(scalePercent == 10) && !alreadyPressed)
+        	{
+        		scalePercent += 1;
+        		alreadyPressed = true;
+        	}
+        }
+        else if(drive.getPOV() == 180)
+        {
+        	if(!(scalePercent == 1) && !alreadyPressed)
+        	{
+        		scalePercent -= 1;
+        		alreadyPressed = true;
+        	}
+        }
+        else
+        {
+        	alreadyPressed = false;
+        }
+        System.out.println("scalePercent: " + scalePercent);
         
-        move(xAxis, yAxis, zTurn*0.7);
+        move(xAxis * scalePercent*0.1, yAxis * scalePercent*0.1, zTurn*0.7*scalePercent*0.1);
         
         /*
          * Secondary Controller
@@ -205,7 +234,7 @@ public class TeleopThread extends RobotThread {
 		}
         else if(secondary.getPOV() == 180)
         {
-        	lift.moveLift(-0.25);
+        	lift.moveLift(-0.5);
         }
         else
         {
@@ -254,8 +283,6 @@ public class TeleopThread extends RobotThread {
         	//ramp.stop();
         	intake.stopIntake();
         }
-
-        delay(50);
 	}
 	
 	/**
@@ -267,10 +294,10 @@ public class TeleopThread extends RobotThread {
 	public void move(double x1, double y1, double x2)
 	{
 		if(isRobotCentric){
-        	driveBase.drive(-y1, x1, -x2);
+        	driveBase.drive(x1, -y1, x2);
         } else if(isFieldCentric){
         	//System.out.println("isFieldCentric");
-            driveBase.getFieldCentric(-x1, -y1, -x2);
+            driveBase.getFieldCentric(x1, -y1, x2);
         }
 	}
 	
